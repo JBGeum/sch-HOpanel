@@ -1,0 +1,7 @@
+node_modules/
+dist/
+sch-boilerplate.zip
+*.log
+.DS_Store
+.idea/
+docs/

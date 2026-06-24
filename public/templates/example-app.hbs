@@ -1,0 +1,21 @@
+<div class="sch-boilerplate-example">
+  <p>{{localize "SCH.ExampleApp.Intro"}}</p>
+
+  {{#if showHints}}
+  <p class="hint">{{localize "SCH.ExampleApp.Hint"}}</p>
+  {{/if}}
+
+  <p>
+    {{localize "SCH.ExampleApp.Status"}}:
+    {{#if welcomed}}
+      <strong>{{localize "SCH.ExampleApp.Welcomed"}}</strong>
+    {{else}}
+      <em>{{localize "SCH.ExampleApp.NotWelcomed"}}</em>
+    {{/if}}
+  </p>
+
+  <button type="button" data-action="greet">
+    <i class="fa-solid fa-hand"></i>
+    {{localize "SCH.ExampleApp.GreetButton"}}
+  </button>
+</div>

@@ -1,0 +1,22 @@
+{
+  "name": "sch-boilerplate",
+  "version": "0.0.0",
+  "description": "A reusable boilerplate for Foundry VTT v13+ modules (TypeScript + Vite).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "package:template": "node scripts/package-template.mjs"
+  },
+  "author": "JBGeum",
+  "license": "MIT",
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "fvtt-types": "13.346.0-beta.20250812191140",
+    "sass": "^1.77.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0"
+  }
+}
