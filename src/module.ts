@@ -15,7 +15,7 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
   log.info("Ready");
 
-  // 다른 모듈/매크로에서 game.modules.get("sch-boilerplate").api 로 접근 가능.
+  // 다른 모듈/매크로에서 game.modules.get("sch-handout-panel").api 로 접근 가능.
   const mod = game.modules.get(MODULE_ID);
   if (mod) {
     mod.api = {

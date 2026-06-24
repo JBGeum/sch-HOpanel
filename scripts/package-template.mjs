@@ -4,7 +4,7 @@
  * 빌드된 Foundry 모듈(dist)이 아니라 프로젝트 소스 전체를 담는다.
  * 제외: node_modules / dist / .git / .idea / 기존 zip 산출물
  *
- * 사용: npm run package:template  →  저장소 루트에 sch-boilerplate.zip 생성
+ * 사용: npm run package:template  →  저장소 루트에 sch-handout-panel.zip 생성
  */
 import { createWriteStream } from "node:fs";
 import { readdir } from "node:fs/promises";
@@ -12,7 +12,7 @@ import { join, relative, sep } from "node:path";
 import archiver from "archiver";
 
 const ROOT = process.cwd();
-const OUT_NAME = "sch-boilerplate.zip";
+const OUT_NAME = "sch-handout-panel.zip";
 const OUT_PATH = join(ROOT, OUT_NAME);
 
 // docs/ 는 이 boilerplate 의 설계/브레인스토밍 산출물이라 새 프로젝트 scaffold 에는 제외한다.

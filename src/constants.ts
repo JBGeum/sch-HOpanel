@@ -2,7 +2,7 @@
  * 모듈 전역 상수. 새 모듈로 옮길 때 MODULE_ID 만 바꾸면 된다.
  * (public/module.json 의 "id" 와 반드시 일치해야 한다)
  */
-export const MODULE_ID = "sch-boilerplate";
+export const MODULE_ID = "sch-handout-panel";
 
 /** 설정 키. 매직 스트링을 한 곳에서 관리한다. */
 export const SETTINGS = {

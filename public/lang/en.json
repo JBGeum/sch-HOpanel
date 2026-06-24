@@ -5,12 +5,12 @@
   "SCH.Settings.ShowHints.Hint": "Show helper hints in the example window (per client).",
   "SCH.Settings.DebugMode.Name": "Debug Mode",
   "SCH.Settings.DebugMode.Hint": "Enable verbose debug logging to the console (per client).",
-  "SCH.ExampleApp.Title": "SCH Boilerplate — Example",
+  "SCH.ExampleApp.Title": "SCH Handout Panel — Example",
   "SCH.ExampleApp.Intro": "This is an ApplicationV2 + Handlebars example window.",
   "SCH.ExampleApp.Hint": "Tip: toggle 'Show Hints' in the module settings to hide this line.",
   "SCH.ExampleApp.Status": "Status",
   "SCH.ExampleApp.Welcomed": "Welcomed",
   "SCH.ExampleApp.NotWelcomed": "Not welcomed yet",
   "SCH.ExampleApp.GreetButton": "Greet",
-  "SCH.ExampleApp.Greeting": "Hello from SCH Boilerplate!"
+  "SCH.ExampleApp.Greeting": "Hello from SCH Handout Panel!"
 }

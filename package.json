@@ -1,7 +1,7 @@
 {
-  "name": "sch-boilerplate",
+  "name": "sch-handout-panel",
   "version": "0.0.0",
-  "description": "A reusable boilerplate for Foundry VTT v13+ modules (TypeScript + Vite).",
+  "description": "Distribute TRPG handouts and manage secret permissions on top of Foundry JournalEntry.",
   "private": true,
   "type": "module",
   "scripts": {

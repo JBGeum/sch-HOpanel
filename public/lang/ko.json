@@ -5,12 +5,12 @@
   "SCH.Settings.ShowHints.Hint": "예제 창에 도움말 힌트를 표시합니다 (클라이언트별).",
   "SCH.Settings.DebugMode.Name": "디버그 모드",
   "SCH.Settings.DebugMode.Hint": "콘솔에 상세 디버그 로그를 출력합니다 (클라이언트별).",
-  "SCH.ExampleApp.Title": "SCH Boilerplate — 예제",
+  "SCH.ExampleApp.Title": "SCH Handout Panel — 예제",
   "SCH.ExampleApp.Intro": "ApplicationV2 + Handlebars 예제 창입니다.",
   "SCH.ExampleApp.Hint": "팁: 모듈 설정에서 '힌트 표시'를 끄면 이 줄이 숨겨집니다.",
   "SCH.ExampleApp.Status": "상태",
   "SCH.ExampleApp.Welcomed": "인사 완료",
   "SCH.ExampleApp.NotWelcomed": "아직 인사하지 않음",
   "SCH.ExampleApp.GreetButton": "인사하기",
-  "SCH.ExampleApp.Greeting": "SCH Boilerplate에서 인사드립니다!"
+  "SCH.ExampleApp.Greeting": "SCH Handout Panel에서 인사드립니다!"
 }

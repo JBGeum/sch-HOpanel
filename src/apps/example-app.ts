@@ -17,7 +17,7 @@ interface ExampleContext extends foundry.applications.api.ApplicationV2.RenderCo
  */
 export class ExampleApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static override DEFAULT_OPTIONS = {
-    id: "sch-boilerplate-example",
+    id: "sch-handout-panel-example",
     tag: "div",
     window: {
       title: "SCH.ExampleApp.Title",
