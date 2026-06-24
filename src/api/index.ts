@@ -1,4 +1,5 @@
 import {
+  applyFlagsUpdate,
   applyRevealState,
   canManage,
   createHandoutDoc,
@@ -27,6 +28,10 @@ export interface HandoutApi {
   }): Promise<HandoutView>;
   revealSecret(id: string, targetActorIds: string[]): Promise<void>;
   deleteHandout(id: string): Promise<void>;
+  updateHandoutMeta(
+    id: string,
+    meta: { owner: Owner; kind: HandoutKind; tags: string[] },
+  ): Promise<void>;
 }
 
 export function buildApi(): HandoutApi {
@@ -84,6 +89,13 @@ export function buildApi(): HandoutApi {
         return;
       }
       await deleteHandoutDoc(id);
+    },
+
+    async updateHandoutMeta(id, meta) {
+      if (!game.user?.isGM) throw new Error("updateHandoutMeta: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`updateHandoutMeta: handout not found: ${id}`);
+      await applyFlagsUpdate(doc, meta);
     },
   };
 }
