@@ -49,13 +49,10 @@ declare module "fvtt-types/configuration" {
     };
   }
 
-  /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입.
-   *  NOTE: api 는 Task 5 에서 import("./api/index").HandoutApi 로 교체한다.
-   *        현재는 circular-reference 방지를 위해 unknown 으로 임시 선언.
-   */
+  /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입. */
   interface ModuleConfig {
     "sch-handout-panel": {
-      api: unknown;
+      api: import("./api/index").HandoutApi;
     };
   }
 }
