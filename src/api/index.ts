@@ -36,6 +36,7 @@ export function buildApi(): HandoutApi {
       if (filter?.kind) docs = docs.filter((d) => d.flags.kind === filter.kind);
       if (filter?.tag) docs = docs.filter((d) => d.flags.tags.includes(filter.tag!));
       if (filter?.owner)
+        // TODO(Task 8): gm-kind owners have undefined actorId on both sides; refine owner filtering.
         docs = docs.filter((d) => d.flags.owner.actorId === filter.owner!.actorId);
       return docs.map((d) => toHandoutView(d)).filter((v): v is HandoutView => v !== null);
     },

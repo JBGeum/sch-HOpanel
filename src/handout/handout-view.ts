@@ -1,6 +1,6 @@
 import type { SecretMode, SurfaceMode } from "./reveal-state";
 import type { CategoryDict } from "./handout-flags";
-import { canManage, resolveActorOwners, type HandoutDoc } from "./handout-repo";
+import { canManage, type HandoutDoc } from "./handout-repo";
 
 export interface Chip {
   area: "surface" | "secret";
