@@ -14,12 +14,11 @@ import {
   type HandoutKind,
 } from "./handout-flags";
 
-/** Foundry OWNER level constant (used for actor ownership threshold check). */
-const OWNER_LEVEL = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-
 /**
  * Resolves the non-GM User ids that hold OWNER-level permission on the given actor.
  * Uses `actor.ownership` (the raw permission map) and compares against `game.users`.
+ * CONST is accessed inside the function body (not at module scope) to avoid failures
+ * when the module is imported in unit-test environments without Foundry globals.
  */
 export function resolveActorOwners(actorId: string): string[] {
   const actor = game.actors?.get(actorId);
@@ -27,11 +26,13 @@ export function resolveActorOwners(actorId: string): string[] {
   // actor.ownership is typed as Record<string, number> in fvtt-types; cast to ensure
   // TS treats 'default' key access as a number lookup.
   const ownership = actor.ownership as Record<string, number> ?? {};
+  // Defer CONST access to function body so this module can be imported without Foundry globals.
+  const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
   const ids: string[] = [];
   for (const user of game.users ?? []) {
     if (user.isGM) continue;
     const level = ownership[user.id] ?? ownership["default"] ?? 0;
-    if (level >= OWNER_LEVEL) ids.push(user.id);
+    if (level >= ownerLevel) ids.push(user.id);
   }
   return ids;
 }
@@ -65,6 +66,17 @@ function toDoc(entry: JournalEntry): HandoutDoc | null {
     surfacePage: pageByArea(entry, AREA.surface),
     secretPage: pageByArea(entry, AREA.secret),
   };
+}
+
+/**
+ * Returns true if the current user may manage (reveal) this handout:
+ * GM always can; otherwise the user must hold OWNER-level permission on the handout's actor.
+ */
+export function canManage(doc: HandoutDoc): boolean {
+  if (game.user?.isGM) return true;
+  if (doc.flags.owner.kind !== "actor" || !doc.flags.owner.actorId) return false;
+  const ownerUsers = resolveActorOwners(doc.flags.owner.actorId);
+  return ownerUsers.includes(game.user?.id ?? "");
 }
 
 /** Retrieves a single HandoutDoc by JournalEntry id. Returns null if not found or not a handout. */
