@@ -92,6 +92,19 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     return { ...base, theme, isDark: theme === "dark", count: rows.length, rows };
   }
 
+  /**
+   * After each render, stamp data-theme on the app ROOT element so that
+   * _themes.scss (:where(.sch-handout-panel)[data-theme=...]) matches the root
+   * and cascades --shp-* variables into the native .window-header sibling.
+   */
+  protected override async _onRender(
+    _context: foundry.applications.api.ApplicationV2.RenderContext,
+    _options: foundry.applications.api.ApplicationV2.RenderOptions,
+  ): Promise<void> {
+    const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
+    this.element.dataset.theme = theme;
+  }
+
   /** Used as action handler for "toggle-theme". Protected prefix so it's accessible from DEFAULT_OPTIONS. */
   protected static async _onToggleTheme(this: HandoutPanel): Promise<void> {
     const next = ((getSetting(SETTINGS.theme) as string) ?? "light") === "light" ? "dark" : "light";

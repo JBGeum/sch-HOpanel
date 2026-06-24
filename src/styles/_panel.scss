@@ -14,6 +14,37 @@ $r: $shp-radius;
   padding: 0;
 }
 
+// 네이티브 .window-header 를 오리지널 .shp-titlebar 디자인으로 재스타일.
+// 반드시 .application.sch-handout-panel 하위로 스코프하여 다른 Foundry 창에 영향을 주지 않는다.
+// v13 DOM: header.window-header > i.window-icon + h1.window-title + button.header-control(⚙) + button.header-control(✕)
+.application.sch-handout-panel {
+  > .window-header {
+    background: var(--shp-header-bg);
+    border-bottom: 1px solid var(--shp-border);
+
+    .window-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--shp-text);
+      font-family: $shp-font;
+    }
+
+    // 아이콘(스크롤) 색상을 헤더 배경 위에서 읽기 쉽게.
+    .window-icon {
+      color: var(--shp-icon-tx);
+    }
+
+    // 오른쪽 컨트롤 버튼(⚙, ✕) — 모양은 native 유지, 색만 조정.
+    .header-control {
+      color: var(--shp-icon-tx);
+
+      &:hover {
+        color: var(--shp-text);
+      }
+    }
+  }
+}
+
 .sch-handout-panel {
   // ApplicationV2 window-content 안에서 패널이 이 클래스를 갖는다고 가정.
   font-family: $shp-font;
