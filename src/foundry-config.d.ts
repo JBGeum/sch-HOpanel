@@ -13,6 +13,18 @@ export {};
 
 declare module "fvtt-types/configuration" {
   /**
+   * getSceneControlButtons is rewritten in v13; fvtt-types has it commented out.
+   * Augment Hooks.HookConfig directly so Hooks.on("getSceneControlButtons", ...) type-checks.
+   * controls is a Record<string, SceneControls.Control> object in v13 (not an array).
+   */
+  namespace Hooks {
+    interface HookConfig {
+      getSceneControlButtons: (
+        controls: Record<string, foundry.applications.ui.SceneControls.Control>,
+      ) => void;
+    }
+  }
+  /**
    * "ready" 훅이 실행된 이후를 가정하여 game / game.settings / game.i18n 등을
    * undefined 가 아닌 초기화된 타입으로 다룬다. 모듈 코드는 init 이후에 실행되므로 안전하다.
    */

@@ -5,5 +5,7 @@
   "SCH.Settings.CategoryDict.Hint": "카테고리 키 → 라벨·톤 매핑입니다 (월드 공통).",
   "SCH.Settings.DebugMode.Name": "디버그 모드",
   "SCH.Settings.DebugMode.Hint": "콘솔에 상세 디버그 로그를 출력합니다 (클라이언트별).",
-  "SCH.Panel.Title": "핸드아웃 패널"
+  "SCH.Panel.Title": "핸드아웃 패널",
+  "SCH.Controls.HandoutPanel": "핸드아웃",
+  "SCH.Controls.OpenPanel": "핸드아웃 패널 열기"
 }

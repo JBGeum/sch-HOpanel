@@ -24,16 +24,26 @@ Hooks.once("ready", () => {
   if (mod) mod.api = buildApi();
 });
 
-// Journal 사이드바 하단에 패널 열기 버튼
-// Cast rationale: fvtt-types renderJournalDirectory hook signature has html typed as unknown
-// (or JQuery in older versions). We cast to HTMLElement — the V13 runtime passes HTMLElement.
-Hooks.on("renderJournalDirectory", (_app: unknown, html: unknown) => {
-  const el = html as HTMLElement;
-  if (el.querySelector(".shp-open-panel")) return;
-  const btn = document.createElement("button");
-  btn.className = "shp-open-panel";
-  btn.type = "button";
-  btn.innerHTML = `<i class="fa-solid fa-scroll"></i> 핸드아웃 패널`;
-  btn.addEventListener("click", () => void new HandoutPanel().render({ force: true }));
-  el.querySelector(".directory-footer")?.append(btn);
+// Scene Controls 툴바에 패널 열기 버튼 등록
+// V13에서 controls는 Record<string, SceneControls.Control> 객체이다.
+// Tool.button: true → 상태 없는 버튼, onChange로 클릭 이벤트 수신.
+Hooks.on("getSceneControlButtons", (controls) => {
+  controls["sch-handout-panel"] = {
+    name: "sch-handout-panel",
+    order: 10,
+    title: "SCH.Controls.HandoutPanel",
+    icon: "fa-solid fa-scroll",
+    visible: true,
+    activeTool: "open-panel",
+    tools: {
+      "open-panel": {
+        name: "open-panel",
+        order: 1,
+        title: "SCH.Controls.OpenPanel",
+        icon: "fa-solid fa-scroll",
+        button: true,
+        onChange: () => void new HandoutPanel().render({ force: true }),
+      },
+    },
+  };
 });
