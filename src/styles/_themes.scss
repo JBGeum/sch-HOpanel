@@ -1,0 +1,52 @@
+// =============================================================
+//  _themes.scss — 토큰 맵을 CSS custom property 로 방출
+//  컴포넌트 SCSS 는 색을 직접 안 쓰고 var(--shp-*) 만 쓴다.
+//  => 테마 추가 = 맵 한 벌 + 셀렉터 한 블록. 컴포넌트 수정 0.
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+
+// 한 테마(표면 맵 + 톤 맵 + 타입 맵)를 custom property 로 펼친다.
+@mixin emit-theme($surface, $tones, $types) {
+  // 표면 컬러
+  @each $key, $val in $surface {
+    --shp-#{$key}: #{$val};
+  }
+  // 상태 톤 (--shp-tone-<name>-bg / -fg / -dot / -bd)
+  @each $name, $t in $tones {
+    --shp-tone-#{$name}-bg:  #{map.get($t, bg)};
+    --shp-tone-#{$name}-fg:  #{map.get($t, fg)};
+    --shp-tone-#{$name}-dot: #{map.get($t, dot)};
+    --shp-tone-#{$name}-bd:  #{map.get($t, bd)};
+  }
+  // 소유자 타입 태그
+  @each $name, $t in $types {
+    --shp-type-#{$name}-bg: #{map.get($t, bg)};
+    --shp-type-#{$name}-fg: #{map.get($t, fg)};
+  }
+}
+
+// ----- 테마 셀렉터 ---------------------------------------------
+// 루트 애플리케이션 요소에 data-theme 를 건다.  (JS: el.dataset.theme = "dark")
+// :where() 로 0-specificity 를 유지해 Foundry 코어 CSS 와 다투지 않게 한다.
+:where(.sch-handout-panel)[data-theme="light"] {
+  @include emit-theme($shp-theme-light, $shp-tones-light, $shp-type-light);
+}
+:where(.sch-handout-panel)[data-theme="dark"] {
+  @include emit-theme($shp-theme-dark, $shp-tones-dark, $shp-type-dark);
+}
+
+// data-theme 미지정 시 라이트 폴백 + 시스템 선호 자동 추종(선택)
+:where(.sch-handout-panel):not([data-theme]) {
+  @include emit-theme($shp-theme-light, $shp-tones-light, $shp-type-light);
+}
+@media (prefers-color-scheme: dark) {
+  :where(.sch-handout-panel)[data-theme="auto"] {
+    @include emit-theme($shp-theme-dark, $shp-tones-dark, $shp-type-dark);
+  }
+}
+@media (prefers-color-scheme: light) {
+  :where(.sch-handout-panel)[data-theme="auto"] {
+    @include emit-theme($shp-theme-light, $shp-tones-light, $shp-type-light);
+  }
+}

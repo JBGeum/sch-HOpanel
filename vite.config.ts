@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 /**
  * 빌드 결과 `dist/`는 그 자체로 완결된(self-contained) Foundry 모듈이다.
  * - `src/module.ts` → `dist/module.js` (ESM 번들)
- * - `src/styles/module.scss` → `dist/module.css`
+ * - `src/styles/main.scss` → `dist/module.css`
  * - `public/` 전체(module.json, templates, lang)는 그대로 `dist/`로 복사
  *
  * 원격 서버에는 `dist/`의 내용물을 통째로 업로드하면 된다.

@@ -1,0 +1,173 @@
+// =============================================================
+//  _tokens.scss — 디자인 토큰 (값의 단일 출처)
+//  여기에는 "값"만 둔다. 선택자에 직접 쓰지 말 것.
+//  -> _themes.scss 가 이 맵들을 CSS custom property 로 방출한다.
+// =============================================================
+@use "sass:map";
+
+// -------------------------------------------------------------
+//  1) 스킨-무관 프리미티브 (테마/스킨이 바뀌어도 고정)
+// -------------------------------------------------------------
+$shp-font: ("Pretendard", "Pretendard Variable", "Noto Sans KR", system-ui, sans-serif);
+
+$shp-radius: (
+  panel: 13px,
+  card:  10px,
+  input:  8px,
+  chip:  999px,
+  seg:    7px,
+);
+
+// 밀도(density)는 스킨 축에서 덮어쓸 수 있도록 "기본값"만 여기 둔다.
+// _skins.scss 가 data-skin 에 따라 같은 이름의 custom property 를 재정의한다.
+$shp-density-comfortable: (   // 스킨 A (리스트 + 펼침)
+  row-py:     8px,
+  row-px:    14px,
+  group-py:   6px,
+  gap-chip:   7px,
+  name-size: 13px,
+);
+$shp-density-compact: (       // 스킨 C (그룹 + 초밀집)
+  row-py:     6px,
+  row-px:    12px,
+  group-py:   6px,
+  gap-chip:   6px,
+  name-size: 12.5px,
+);
+
+// -------------------------------------------------------------
+//  2) 컬러 테마 (light / dark)  — 표면(surface) 컬러
+//     키 이름이 곧 custom property 이름(--shp-<key>) 이 된다.
+// -------------------------------------------------------------
+$shp-theme-light: (
+  page-bg:        #e9e7e2,
+  panel:          #fcfbf9,
+  border:         #e4e1db,
+  border-soft:    #efece7,
+  header-bg:      #f3f0ec,
+  text:           #2a2722,
+  subtext:        #857f75,
+  muted:          #a8a299,
+  count-bg:       #eceae5,
+  count-tx:       #908a80,
+  icon-tx:        #b8b2a8,
+  shadow:         (0 10px 34px rgba(40,36,30,.13)),
+  input-bg:       #ffffff,
+  input-border:   #ddd9d2,
+  placeholder:    #b3ada3,
+  seg-border:     #ddd9d2,
+  seg-on-bg:      #eef0fb,
+  seg-on-tx:      #3a49b8,
+  seg-off-bg:     #fcfbf9,
+  seg-off-tx:     #9b958b,
+  btn-bg:         #ffffff,
+  btn-tx:         #5a5650,
+  btn-border:     #ddd9d2,
+  col-head-bg:    #f7f5f1,
+  group-bg:       #f1efe9,
+  group-tx:       #8f8a80,
+  row-border:     #f0ede8,
+  row-hover:      #f7f5f1,
+  expand-bg:      #f5f6fe,
+  expand-border:  #e4e3f2,
+  detail-label:   #8a857c,
+  content-bg:     #ffffff,
+  content-border: #ece9e3,
+  content-tx:     #6b665e,
+  secret-bg:      #fbf6ee,
+  secret-border:  #e3d9c4,
+  secret-tx:      #46423b,
+  primary:        #4a5bd0,
+  danger-tx:      #a23b34,
+  danger-border:  #eccbc6,
+  caret:          #c4bfb6,
+  caret-open:     #4a5bd0,
+);
+
+$shp-theme-dark: (
+  page-bg:        #141519,
+  panel:          #1c1d24,
+  border:         #33353f,
+  border-soft:    #2b2d36,
+  header-bg:      #23252e,
+  text:           #e7e5e1,
+  subtext:        #9aa0ad,
+  muted:          #7f8593,
+  count-bg:       #2b2d36,
+  count-tx:       #8a8f9c,
+  icon-tx:        #5b5e6a,
+  shadow:         (0 14px 40px rgba(0,0,0,.55)),
+  input-bg:       #15161c,
+  input-border:   #383b45,
+  placeholder:    #6f7480,
+  seg-border:     #383b45,
+  seg-on-bg:      #27304f,
+  seg-on-tx:      #9fb6f2,
+  seg-off-bg:     #1c1d24,
+  seg-off-tx:     #797f8c,
+  btn-bg:         #23252e,
+  btn-tx:         #c3c7d0,
+  btn-border:     #3a3d48,
+  col-head-bg:    #20222a,
+  group-bg:       #20222a,
+  group-tx:       #9aa0ad,
+  row-border:     #262833,
+  row-hover:      #24262f,
+  expand-bg:      #22253a,
+  expand-border:  #323650,
+  detail-label:   #9aa0ad,
+  content-bg:     #15161c,
+  content-border: #2e3038,
+  content-tx:     #b6bac2,
+  secret-bg:      #262017,
+  secret-border:  #4a3d24,
+  secret-tx:      #d9cdb6,
+  primary:        #5e6fe0,
+  danger-tx:      #e08a82,
+  danger-border:  #533029,
+  caret:          #5b5e6a,
+  caret-open:     #8fa2f0,
+);
+
+// -------------------------------------------------------------
+//  3) 상태 칩 팔레트 (가시성/공개 상태)
+//     각 톤은 (bg, fg, dot, bd) 4값. 테마별로 한 벌씩.
+//     의미 매핑:
+//       표면(surface): all=green / limited=amber / hidden=rose
+//       비밀(secret):  owner=slate / limited=blue / all=violet
+// -------------------------------------------------------------
+$shp-tones-light: (
+  green:  (bg:#e7f3ec, fg:#1f7a4d, dot:#2faa6a, bd:#cfe6da),
+  amber:  (bg:#f6efda, fg:#8a6a1e, dot:#c79a2e, bd:#ebdcb8),
+  rose:   (bg:#f7e7e5, fg:#a23b34, dot:#d05a50, bd:#eccbc6),
+  slate:  (bg:#edeef1, fg:#5a6270, dot:#8b93a1, bd:#dcdee3),
+  blue:   (bg:#e6edfa, fg:#2f55b8, dot:#4f78e0, bd:#cdd9f3),
+  violet: (bg:#f0e9f8, fg:#6e3fb0, dot:#9968d8, bd:#e0d3f0),
+  teal:   (bg:#e1f1f0, fg:#1d7873, dot:#34a8a0, bd:#c6e6e3),
+);
+$shp-tones-dark: (
+  green:  (bg:#18352a, fg:#5cc99a, dot:#3fae7d, bd:#214a3a),
+  amber:  (bg:#352c16, fg:#d7b25a, dot:#c79a2e, bd:#4a3d1e),
+  rose:   (bg:#3a201d, fg:#e08a82, dot:#d05a50, bd:#532d28),
+  slate:  (bg:#262a32, fg:#aab2c0, dot:#7b8492, bd:#363b45),
+  blue:   (bg:#1c2747, fg:#8fb0f2, dot:#5f86e6, bd:#2a3a63),
+  violet: (bg:#2c2342, fg:#bd9be8, dot:#9968d8, bd:#3e3260),
+  teal:   (bg:#16302e, fg:#52bdb4, dot:#34a8a0, bd:#214a46),
+);
+
+// 상태 -> 톤 의미 매핑 (테마 무관, 구조적)
+$shp-surface-tone: (all: green, limited: amber, hidden: rose);
+$shp-secret-tone:  (owner: slate, limited: blue, all: violet);
+
+// 카테고리(태그) -> 톤 매핑.  새 카테고리는 여기 한 줄 추가.
+$shp-category-tone: (
+  main:  rose,
+  sub:   blue,
+  yokai: violet,
+  place: teal,
+  clue:  amber,
+);
+
+// 소유자 타입 태그(PC / 떠도는)
+$shp-type-light: (pc: (bg:#e8eaf6, fg:#5562c4), floating: (bg:#f3ecdd, fg:#9a7b32));
+$shp-type-dark:  (pc: (bg:#262a3f, fg:#97a2e0), floating: (bg:#322c1d, fg:#c2a05a));
