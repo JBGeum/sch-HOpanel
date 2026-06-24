@@ -16,6 +16,7 @@ function escapeHtml(s: string): string {
 interface PanelContext extends foundry.applications.api.ApplicationV2.RenderContext {
   theme: string;
   isDark: boolean;
+  isGM: boolean;
   count: number;
   rows: (HandoutView & { expanded: boolean })[];
 }
@@ -36,6 +37,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       "toggle-expand": HandoutPanel._onToggleExpand,
       reveal: HandoutPanel._onReveal,
       "open-sheet": HandoutPanel._onOpenSheet,
+      delete: HandoutPanel._onDelete,
     },
   };
 
@@ -89,7 +91,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     // Cache count so the synchronous title getter can read it without re-querying.
     this.#lastCount = rows.length;
 
-    return { ...base, theme, isDark: theme === "dark", count: rows.length, rows };
+    return { ...base, theme, isDark: theme === "dark", isGM: game.user?.isGM ?? false, count: rows.length, rows };
   }
 
   /**
@@ -148,6 +150,24 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const doc = id ? getHandoutDoc(id) : null;
     if (!doc) return;
     await HandoutPanel._openRevealDialog(doc.entry.id ?? "", doc.flags.revealState.secret.revealedTo);
+    void this.render();
+  }
+
+  /**
+   * 삭제 확인 다이얼로그(DialogV2.confirm) → 확인 시 공개 API 로 삭제 → 재렌더.
+   * entry.delete() 는 되돌릴 수 없으므로 1단계 확인 필수(회수와 달리 데이터 자체 제거).
+   */
+  protected static async _onDelete(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
+    const id = target.dataset.handoutId;
+    if (!id) return;
+    const confirmed = await DialogV2.confirm({
+      window: { title: "핸드아웃 삭제" },
+      content: "<p>이 핸드아웃을 삭제합니다. <b>되돌릴 수 없습니다.</b></p>",
+      rejectClose: false,
+    });
+    if (!confirmed) return;
+    const api = game.modules.get(MODULE_ID)?.api;
+    await api?.deleteHandout(id);
     void this.render();
   }
 

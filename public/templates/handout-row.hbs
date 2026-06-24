@@ -30,6 +30,7 @@
       {{#if canManage}}<button class="shp-btn--reveal" data-action="reveal" data-handout-id="{{id}}" type="button">＋ 공개</button>{{/if}}
       <span class="shp-actions__spacer"></span>
       <button class="shp-btn" data-action="open-sheet" data-handout-id="{{id}}" type="button">시트 열기</button>
+      {{#if @root.isGM}}<button class="shp-btn shp-btn--danger" data-action="delete" data-handout-id="{{id}}" type="button">삭제</button>{{/if}}
     </div>
   </div>
   {{/if}}
