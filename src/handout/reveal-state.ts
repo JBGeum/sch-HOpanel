@@ -48,6 +48,20 @@ function buildMap(
   return map;
 }
 
+/** Element-wise MAX of two ownership maps (used to derive entry-level ownership
+ *  from the surface and secret page maps: a user who can see either can see the entry). */
+export function mergeOwnershipMaps(a: OwnershipMap, b: OwnershipMap): OwnershipMap {
+  const out: OwnershipMap = { default: Math.max(a.default, b.default) as OwnershipLevel };
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const k of keys) {
+    if (k === "default") continue;
+    const av = (a[k] ?? a.default) as OwnershipLevel;
+    const bv = (b[k] ?? b.default) as OwnershipLevel;
+    out[k] = Math.max(av, bv) as OwnershipLevel;
+  }
+  return out;
+}
+
 export function computeOwnership(input: ComputeInput): {
   surface: OwnershipMap;
   secret: OwnershipMap;

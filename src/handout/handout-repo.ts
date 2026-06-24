@@ -5,7 +5,7 @@
  */
 
 import { AREA, FLAG_SCOPE, HANDOUT_FOLDER_NAME } from "../constants";
-import { computeOwnership, type Owner, type RevealState } from "./reveal-state";
+import { computeOwnership, mergeOwnershipMaps, type Owner, type RevealState } from "./reveal-state";
 import {
   defaultFlags,
   isHandout,
@@ -123,6 +123,7 @@ export async function ensureHandoutFolder(): Promise<Folder> {
 function deriveOwnership(flags: HandoutFlags): {
   surface: Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>;
   secret: Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>;
+  entry: Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>;
 } {
   const result = computeOwnership({
     owner: flags.owner,
@@ -135,6 +136,7 @@ function deriveOwnership(flags: HandoutFlags): {
   return {
     surface: result.surface as unknown as Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>,
     secret: result.secret as unknown as Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>,
+    entry: mergeOwnershipMaps(result.surface, result.secret) as unknown as Record<string, CONST.DOCUMENT_OWNERSHIP_LEVELS>,
   };
 }
 
@@ -160,6 +162,7 @@ export async function createHandoutDoc(args: {
     name: args.kind === "pc" ? "PC 핸드아웃" : "떠도는 핸드아웃",
     folder: folder.id,
     flags: { [FLAG_SCOPE]: flags },
+    ownership: ownership.entry,
     pages: [
       {
         name: "표면",
@@ -196,6 +199,8 @@ export async function applyRevealState(doc: HandoutDoc, next: RevealState): Prom
 
   // Persist flag first so the entry's stored state matches the derived ownership.
   await doc.entry.setFlag(FLAG_SCOPE, "revealState", next);
+  // Update entry ownership (derived as element-wise MAX of surface and secret maps).
+  await doc.entry.update({ ownership: ownership.entry });
   // Update both pages' ownership to match the newly derived maps.
   if (doc.surfacePage) await doc.surfacePage.update({ ownership: ownership.surface });
   if (doc.secretPage) await doc.secretPage.update({ ownership: ownership.secret });

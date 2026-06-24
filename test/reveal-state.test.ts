@@ -89,6 +89,38 @@ describe("computeOwnership — secret", () => {
   });
 });
 
+describe("mergeOwnershipMaps", () => {
+  // Import is checked at module level — we rely on the named export being present.
+  // If the function doesn't exist yet, the import itself will throw and all tests here will error.
+  it("PC handout (surface all + secret owner): surface default wins, owner stays OWNER", async () => {
+    const { mergeOwnershipMaps } = await import("../src/handout/reveal-state");
+    const surface = { default: OWNERSHIP.OBSERVER, u1: OWNERSHIP.OWNER };
+    const secret = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
+    expect(mergeOwnershipMaps(surface, secret)).toEqual({ default: OWNERSHIP.OBSERVER, u1: OWNERSHIP.OWNER });
+  });
+
+  it("hidden surface + owner secret: entry stays private to owner only", async () => {
+    const { mergeOwnershipMaps } = await import("../src/handout/reveal-state");
+    const surface = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
+    const secret = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
+    expect(mergeOwnershipMaps(surface, secret)).toEqual({ default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER });
+  });
+
+  it("secret revealed to u2: u2 receives OBSERVER on entry", async () => {
+    const { mergeOwnershipMaps } = await import("../src/handout/reveal-state");
+    const surface = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
+    const secret = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER, u2: OWNERSHIP.OBSERVER };
+    expect(mergeOwnershipMaps(surface, secret)).toEqual({ default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER, u2: OWNERSHIP.OBSERVER });
+  });
+
+  it("OWNER in one map + OBSERVER in other: OWNER wins (max)", async () => {
+    const { mergeOwnershipMaps } = await import("../src/handout/reveal-state");
+    const surface = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
+    const secret = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OBSERVER };
+    expect(mergeOwnershipMaps(surface, secret)).toEqual({ default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER });
+  });
+});
+
 describe("computeOwnership — edge cases", () => {
   it("gm owner → secret owner is GM-only ({default: NONE})", () => {
     const { secret } = computeOwnership(input({ owner: { kind: "gm" } }));
