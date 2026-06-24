@@ -36,10 +36,10 @@ export function defaultFlags(owner: Owner, kind: HandoutKind, tags: string[] = [
 
 /** flag 보유 = 핸드아웃 식별(진실의 원천). 없으면 null. */
 export function readHandoutFlags(entry: JournalEntry): HandoutFlags | null {
-  const flags = entry.getFlag(FLAG_SCOPE, "owner");
-  if (flags === undefined) return null;
+  const owner = entry.getFlag(FLAG_SCOPE, "owner");
+  if (owner === undefined) return null;
   return {
-    owner: entry.getFlag(FLAG_SCOPE, "owner") as Owner,
+    owner: owner as Owner,
     kind: entry.getFlag(FLAG_SCOPE, "kind") as HandoutKind,
     tags: (entry.getFlag(FLAG_SCOPE, "tags") as string[] | undefined) ?? [],
     revealState: entry.getFlag(FLAG_SCOPE, "revealState") as RevealState,

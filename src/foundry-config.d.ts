@@ -34,13 +34,10 @@ declare module "fvtt-types/configuration" {
   interface FlagConfig {
     JournalEntry: {
       "sch-handout-panel": {
-        owner: { kind: "actor" | "gm"; actorId?: string };
-        kind: "pc" | "floating";
+        owner: import("./handout/reveal-state").Owner;
+        kind: import("./handout/handout-flags").HandoutKind;
         tags: string[];
-        revealState: {
-          surface: { mode: "all" | "limited" | "hidden"; revealedTo: string[] };
-          secret: { mode: "owner" | "limited" | "all"; revealedTo: string[] };
-        };
+        revealState: import("./handout/reveal-state").RevealState;
       };
     };
   }
