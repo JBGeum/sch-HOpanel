@@ -10,11 +10,12 @@ import "./styles/main.scss";
 Hooks.once("init", () => {
   log.info("Initializing");
   registerSettings();
-  // 행 partial 을 Handlebars 에 등록한다. loadTemplates 에 넘기면 경로명이 partial 이름이 된다.
+  // 행 partial 을 Handlebars 에 등록한다.
+  // 객체 형태로 loadTemplates 를 호출하면 키가 partial 이름이 된다.
   // handout-panel.hbs 에서 {{> handout-row this}} 로 참조한다.
-  void loadTemplates([
-    `modules/${MODULE_ID}/templates/handout-row.hbs`,
-  ]);
+  void loadTemplates({
+    "handout-row": `modules/${MODULE_ID}/templates/handout-row.hbs`,
+  });
 });
 
 Hooks.once("ready", () => {
