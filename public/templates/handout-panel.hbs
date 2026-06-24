@@ -1,5 +1,10 @@
 <section class="sch-handout-panel" data-theme="{{theme}}" data-view="list" data-skin="a">
   <div class="shp-panel">
+    {{#if isGM}}
+    <div class="shp-toolbar">
+      <button class="shp-btn shp-btn--create" data-action="create" type="button">＋ 핸드아웃</button>
+    </div>
+    {{/if}}
     <div class="shp-colhead"><span>소유자 · 카테고리</span><span>표면</span><span>비밀</span><span></span></div>
 
     <div class="shp-body">

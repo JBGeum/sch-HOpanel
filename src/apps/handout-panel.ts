@@ -2,6 +2,9 @@ import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { getHandoutDoc, listHandoutDocs } from "../handout/handout-repo";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
+import { parseTags } from "../handout/handout-create";
+import type { Owner } from "../handout/reveal-state";
+import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
 import { log } from "../utils/logger";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -21,6 +24,16 @@ interface PanelContext extends foundry.applications.api.ApplicationV2.RenderCont
   rows: (HandoutView & { expanded: boolean })[];
 }
 
+/** 생성 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값. */
+interface CreateFormResult {
+  kind: HandoutKind;
+  actorId: string;
+  surface: string;
+  secret: string;
+  tags: string[];
+  freeTags: string;
+}
+
 export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #expanded = new Set<string>();
   /** Cached handout count from the last _prepareContext call; used by the title getter. */
@@ -37,6 +50,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       "toggle-expand": HandoutPanel._onToggleExpand,
       reveal: HandoutPanel._onReveal,
       "open-sheet": HandoutPanel._onOpenSheet,
+      create: HandoutPanel._onCreate,
       delete: HandoutPanel._onDelete,
     },
   };
@@ -169,6 +183,117 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const api = game.modules.get(MODULE_ID)?.api;
     await api?.deleteHandout(id);
     void this.render();
+  }
+
+  /**
+   * 생성 다이얼로그를 열고, 취소가 아니면 태그를 정규화한 뒤 공개 API 로 생성 → 재렌더.
+   * owner 는 kind 에 따라 actor/gm 분기. 권한 로직은 추가하지 않고 createHandout 에 위임.
+   */
+  protected static async _onCreate(this: HandoutPanel): Promise<void> {
+    const dict = (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
+    const result = await HandoutPanel._openCreateDialog(dict);
+    if (!result) return;
+    const tags = parseTags(result.tags, result.freeTags);
+    const owner: Owner =
+      result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
+    const api = game.modules.get(MODULE_ID)?.api;
+    await api?.createHandout({
+      owner,
+      kind: result.kind,
+      tags,
+      surface: result.surface,
+      secret: result.secret,
+    });
+    log.info("createHandout requested", owner, tags);
+    void this.render();
+  }
+
+  /**
+   * 생성 폼 다이얼로그(DialogV2.wait). _openRevealDialog 와 동일 패턴:
+   * ok 콜백이 dialog.element 에서 값을 직접 수집해 객체로 반환한다.
+   * 플레이어 소유 액터가 0개면 PC 라디오 비활성·기본 떠도는·actorId 행 숨김 →
+   * 항상 유효한 기본 상태이므로 폼 검증/재오픈이 불필요(리스크 §11 검증 단순화).
+   */
+  protected static async _openCreateDialog(dict: CategoryDict): Promise<CreateFormResult | null> {
+    const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
+    const hasPc = pcs.length > 0;
+
+    const actorOptions = pcs
+      .map((a) => `<option value="${escapeHtml(a.id ?? "")}">${escapeHtml(a.name ?? "(알 수 없음)")}</option>`)
+      .join("");
+    const tagOptions = Object.entries(dict)
+      .map(([key, def]) => `<option value="${escapeHtml(key)}">${escapeHtml(def.label)}</option>`)
+      .join("");
+
+    const pcAttrs = hasPc ? "checked" : "disabled";
+    const floatingAttrs = hasPc ? "" : "checked";
+    const actorRowStyle = hasPc ? "" : "display:none";
+
+    const content = `
+      <div class="sch-create-form">
+        <fieldset class="sch-create-kind">
+          <legend>종류</legend>
+          <label><input type="radio" name="kind" value="pc" ${pcAttrs}> PC</label>
+          <label><input type="radio" name="kind" value="floating" ${floatingAttrs}> 떠도는</label>
+        </fieldset>
+        <div class="sch-create-actor" style="${actorRowStyle}">
+          <label>소유자 액터<br><select name="actorId">${actorOptions}</select></label>
+        </div>
+        <label>표면<br><textarea name="surface" rows="3"></textarea></label>
+        <label>비밀<br><textarea name="secret" rows="3"></textarea></label>
+        <label>태그<br><select name="tags" multiple size="4">${tagOptions}</select></label>
+        <label>추가 태그(쉼표 구분)<br><input type="text" name="freeTags"></label>
+      </div>`;
+
+    const result = await DialogV2.wait({
+      window: { title: "핸드아웃 생성" },
+      content,
+      rejectClose: false,
+      // 동적 토글: kind 변경 시 actorId 행 표시/숨김.
+      render: (_event, dialog) => {
+        const el = (dialog as unknown as { element: HTMLElement }).element;
+        const actorRow = el.querySelector<HTMLElement>(".sch-create-actor");
+        el.querySelectorAll<HTMLInputElement>('input[name="kind"]').forEach((radio) => {
+          radio.addEventListener("change", () => {
+            const isPc =
+              el.querySelector<HTMLInputElement>('input[name="kind"]:checked')?.value === "pc";
+            if (actorRow) actorRow.style.display = isPc ? "" : "none";
+          });
+        });
+      },
+      buttons: [
+        {
+          action: "ok",
+          label: "생성",
+          icon: "fa-solid fa-check",
+          default: true,
+          // Cast rationale: ButtonCallback 의 dialog 는 DialogV2.Any. element 는 HTMLElement.
+          callback: (
+            _event: PointerEvent | SubmitEvent,
+            _button: HTMLButtonElement,
+            dialog: foundry.applications.api.DialogV2.Any,
+          ) => {
+            const el = (dialog as unknown as { element: HTMLElement }).element;
+            const kind = (el.querySelector<HTMLInputElement>('input[name="kind"]:checked')?.value ??
+              "floating") as HandoutKind;
+            const actorId = el.querySelector<HTMLSelectElement>('select[name="actorId"]')?.value ?? "";
+            const surface = el.querySelector<HTMLTextAreaElement>('textarea[name="surface"]')?.value ?? "";
+            const secret = el.querySelector<HTMLTextAreaElement>('textarea[name="secret"]')?.value ?? "";
+            const tags = Array.from(
+              el.querySelectorAll<HTMLOptionElement>('select[name="tags"] option:checked'),
+            ).map((o) => o.value);
+            const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
+            const out: CreateFormResult = { kind, actorId, surface, secret, tags, freeTags };
+            return out;
+          },
+        },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark" },
+      ],
+    });
+
+    // result: CreateFormResult(ok) | "cancel"(취소) | null(dismiss)
+    if (!result || typeof result === "string") return null;
+    return result as CreateFormResult;
   }
 
   /**

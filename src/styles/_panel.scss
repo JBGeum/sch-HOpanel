@@ -75,6 +75,7 @@ $r: $shp-radius;
 .shp-toolbar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--shp-border-soft);

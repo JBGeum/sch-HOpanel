@@ -206,7 +206,11 @@ $r: $shp-radius;
     background: var(--shp-primary); color: #fff; border: 0;
     font-weight: 700; padding: 6px 14px;
   }
-  &--danger {                 // 회수
+  &--create {                 // 생성 CTA(primary 채움)
+    background: var(--shp-primary); color: #fff; border: 0;
+    font-weight: 700;
+  }
+  &--danger {                 // 회수/삭제
     color: var(--shp-danger-tx);
     border-color: var(--shp-danger-border);
   }
