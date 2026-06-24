@@ -205,3 +205,14 @@ export async function applyRevealState(doc: HandoutDoc, next: RevealState): Prom
   if (doc.surfacePage) await doc.surfacePage.update({ ownership: ownership.surface });
   if (doc.secretPage) await doc.secretPage.update({ ownership: ownership.secret });
 }
+
+/**
+ * 핸드아웃 JournalEntry 를 삭제한다(두 page 함께 제거됨).
+ * 미존재 id 는 조용히 no-op. 폴더(Handouts)는 삭제하지 않는다(엔트리만).
+ * CRUD 대칭(create/get/list 옆의 delete). 직접 ownership 편집 없음(불변식 유지).
+ */
+export async function deleteHandoutDoc(id: string): Promise<void> {
+  const doc = getHandoutDoc(id);
+  if (!doc) return;
+  await doc.entry.delete();
+}

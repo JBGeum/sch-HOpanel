@@ -2,6 +2,7 @@ import {
   applyRevealState,
   canManage,
   createHandoutDoc,
+  deleteHandoutDoc,
   getHandoutDoc,
   listHandoutDocs,
   type HandoutDoc,
@@ -11,6 +12,7 @@ import type { HandoutKind, CategoryDict } from "../handout/handout-flags";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
 import { getSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { SETTINGS } from "../constants";
+import { log } from "../utils/logger";
 
 export interface HandoutApi {
   getHandout(id: string): HandoutView | null;
@@ -24,6 +26,7 @@ export interface HandoutApi {
     secret?: string;
   }): Promise<HandoutView>;
   revealSecret(id: string, targetActorIds: string[]): Promise<void>;
+  deleteHandout(id: string): Promise<void>;
 }
 
 export function buildApi(): HandoutApi {
@@ -71,6 +74,16 @@ export function buildApi(): HandoutApi {
         secret: { mode: nextMode, revealedTo: merged },
       };
       await applyRevealState(doc, next);
+    },
+
+    async deleteHandout(id) {
+      if (!game.user?.isGM) throw new Error("deleteHandout: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) {
+        log.warn("deleteHandout: handout not found, no-op:", id);
+        return;
+      }
+      await deleteHandoutDoc(id);
     },
   };
 }
