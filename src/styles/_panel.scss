@@ -1,5 +1,5 @@
 // =============================================================
-//  _panel.scss — 패널 셸 (타이틀바 · 툴바 · 필터 · 바디 · 푸터)
+//  _panel.scss — 패널 셸 (툴바 · 필터 · 바디 · 푸터)
 //  레이아웃/구조만. 색은 전부 var(--shp-*).
 // =============================================================
 @use "sass:map";
@@ -8,6 +8,12 @@
 $r: $shp-radius;
 
 // 루트 애플리케이션 컨테이너 ----------------------------------
+// app root has both .application and .sch-handout-panel (from DEFAULT_OPTIONS.classes).
+// Remove default window-content padding so the panel sits flush inside the native frame.
+.application.sch-handout-panel > .window-content {
+  padding: 0;
+}
+
 .sch-handout-panel {
   // ApplicationV2 window-content 안에서 패널이 이 클래스를 갖는다고 가정.
   font-family: $shp-font;
@@ -24,80 +30,14 @@ $r: $shp-radius;
   *, *::before, *::after { box-sizing: border-box; }
 }
 
+// .shp-panel fills the window-content flush. Drop outer border/border-radius
+// since the native ApplicationV2 window frame already provides structure.
 .shp-panel {
   display: flex;
   flex-direction: column;
   background: var(--shp-panel);
-  border: 1px solid var(--shp-border);
-  border-radius: map.get($r, panel);
-  box-shadow: var(--shp-shadow);
   overflow: hidden;
-  transition: background .2s, border-color .2s;
-}
-
-// 타이틀바 ----------------------------------------------------
-.shp-titlebar {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 11px 14px;
-  background: var(--shp-header-bg);
-  border-bottom: 1px solid var(--shp-border);
-
-  &__title { font-size: 14px; font-weight: 800; }
-
-  &__count {
-    font-size: 11px; font-weight: 700;
-    color: var(--shp-count-tx);
-    background: var(--shp-count-bg);
-    padding: 1px 8px;
-    border-radius: map.get($r, chip);
-  }
-
-  &__spacer { flex: 1; }
-
-  &__icon {
-    color: var(--shp-icon-tx);
-    font-size: 14px;
-    cursor: pointer;
-  }
-}
-
-// 세그먼트 토글(보기 전환 · 테마 전환 공용) --------------------
-.shp-seg {
-  display: inline-flex;
-  border: 1px solid var(--shp-seg-border);
-  border-radius: map.get($r, input);
-  overflow: hidden;
-
-  &__btn {
-    padding: 5px 11px;
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    background: var(--shp-btn-bg);
-    color: var(--shp-btn-tx);
-    border: 0;
-    & + & { border-left: 1px solid var(--shp-seg-border); }
-
-    &[aria-pressed="true"] {
-      font-weight: 700;
-      background: var(--shp-seg-on-bg);
-      color: var(--shp-seg-on-tx);
-    }
-  }
-}
-
-.shp-iconbtn {
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  width: 30px; height: 28px;
-  border: 1px solid var(--shp-seg-border);
-  border-radius: map.get($r, input);
-  background: var(--shp-btn-bg);
-  color: var(--shp-icon-tx);
-  font-size: 13px;
-  cursor: pointer;
+  transition: background .2s;
 }
 
 // 툴바(검색 + 생성) -------------------------------------------

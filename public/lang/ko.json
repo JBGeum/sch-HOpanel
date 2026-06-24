@@ -6,6 +6,8 @@
   "SCH.Settings.DebugMode.Name": "디버그 모드",
   "SCH.Settings.DebugMode.Hint": "콘솔에 상세 디버그 로그를 출력합니다 (클라이언트별).",
   "SCH.Panel.Title": "핸드아웃 패널",
+  "SCH.Panel.ThemeLight": "라이트 모드로 전환",
+  "SCH.Panel.ThemeDark": "다크 모드로 전환",
   "SCH.Controls.HandoutPanel": "핸드아웃",
   "SCH.Controls.OpenPanel": "핸드아웃 패널 열기"
 }

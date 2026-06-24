@@ -22,6 +22,8 @@ interface PanelContext extends foundry.applications.api.ApplicationV2.RenderCont
 
 export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #expanded = new Set<string>();
+  /** Cached handout count from the last _prepareContext call; used by the title getter. */
+  #lastCount = 0;
 
   static override DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2.DefaultOptions = {
     id: "sch-handout-panel",
@@ -36,6 +38,33 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       "open-sheet": HandoutPanel._onOpenSheet,
     },
   };
+
+  /**
+   * Dynamic window title showing the current handout count.
+   * ApplicationV2 reads this.title when building the window frame title element.
+   * We cache #lastCount in _prepareContext so the getter stays synchronous.
+   */
+  override get title(): string {
+    const base = game.i18n.localize("SCH.Panel.Title");
+    return `${base} (${this.#lastCount})`;
+  }
+
+  /**
+   * Expose the theme-toggle as a header control so it appears in the native
+   * window controls dropdown (the ⚙ button in the window header).
+   * The `action` string maps to the "toggle-theme" key in DEFAULT_OPTIONS.actions.
+   */
+  protected override _getHeaderControls(): foundry.applications.api.ApplicationV2.HeaderControlsEntry[] {
+    const controls = super._getHeaderControls();
+    const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
+    const isDark = theme === "dark";
+    controls.unshift({
+      icon: isDark ? "fa-solid fa-sun" : "fa-solid fa-moon",
+      label: isDark ? "SCH.Panel.ThemeLight" : "SCH.Panel.ThemeDark",
+      action: "toggle-theme",
+    });
+    return controls;
+  }
 
   static override PARTS = {
     main: { template: `modules/${MODULE_ID}/templates/handout-panel.hbs` },
@@ -57,6 +86,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage))
       .map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));
 
+    // Cache count so the synchronous title getter can read it without re-querying.
+    this.#lastCount = rows.length;
+
     return { ...base, theme, isDark: theme === "dark", count: rows.length, rows };
   }
 
@@ -64,7 +96,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   protected static async _onToggleTheme(this: HandoutPanel): Promise<void> {
     const next = ((getSetting(SETTINGS.theme) as string) ?? "light") === "light" ? "dark" : "light";
     await setSetting(SETTINGS.theme, next);
-    void this.render();
+    // Re-render with controls:true so the header controls dropdown icon updates (sun↔moon).
+    void this.render({ window: { controls: true } });
   }
 
   protected static _onToggleExpand(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): void {
