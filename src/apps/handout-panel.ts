@@ -6,6 +6,13 @@ import { log } from "../utils/logger";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
+/** Escape HTML special characters to prevent injection. */
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
+  ));
+}
+
 interface PanelContext extends foundry.applications.api.ApplicationV2.RenderContext {
   theme: string;
   isDark: boolean;
@@ -96,7 +103,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((a) => {
         const isAlready = alreadyRevealed.includes(a.id ?? "");
         const attrs = isAlready ? ' disabled checked' : '';
-        return `<label style="display:block"><input type="checkbox" name="actor" value="${a.id ?? ""}"${attrs}> ${a.name ?? "(알 수 없음)"}</label>`;
+        return `<label style="display:block"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${attrs}> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
       })
       .join("");
 
