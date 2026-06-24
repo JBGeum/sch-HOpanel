@@ -40,6 +40,13 @@ declare module "fvtt-types/configuration" {
         revealState: import("./handout/reveal-state").RevealState;
       };
     };
+    /** JournalEntryPage flag 타입 선언. page.getFlag / setFlag 에서 타입이 추론된다. */
+    JournalEntryPage: {
+      "sch-handout-panel": {
+        /** 페이지 구분: "surface" 또는 "secret". */
+        area: import("./constants").Area;
+      };
+    };
   }
 
   /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입.
