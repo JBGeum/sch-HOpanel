@@ -105,6 +105,19 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     this.element.dataset.theme = theme;
   }
 
+  /**
+   * 패널이 닫힐 때 우리 scene control 이 여전히 활성 상태이면 기본 컨트롤(tokens)로
+   * 되돌려 비활성화한다. V13 scene control 은 "이미 활성인 컨트롤"을 재클릭해도
+   * active 전이가 없어 onChange 를 발화하지 않는다 → 닫은 뒤 같은 버튼을 다시 눌러도
+   * 재오픈되지 않는다. 닫힘 시 비활성화해 두면 다음 클릭이 false→true 전이를 만들어
+   * onChange 가 정상 발화하고 패널이 다시 열린다.
+   */
+  protected override _onClose(options: foundry.applications.api.ApplicationV2.RenderOptions): void {
+    super._onClose(options);
+    const controls = ui.controls;
+    if (controls?.control?.name === MODULE_ID) void controls.activate({ control: "tokens" });
+  }
+
   /** Used as action handler for "toggle-theme". Protected prefix so it's accessible from DEFAULT_OPTIONS. */
   protected static async _onToggleTheme(this: HandoutPanel): Promise<void> {
     const next = ((getSetting(SETTINGS.theme) as string) ?? "light") === "light" ? "dark" : "light";

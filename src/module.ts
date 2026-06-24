@@ -24,37 +24,48 @@ Hooks.once("ready", () => {
   if (mod) mod.api = buildApi();
 });
 
-// Scene Controls 툴바에 패널 열기 버튼 등록
+// Scene Controls 툴바에 패널 열기 버튼 등록 (V13: controls 는 Record<name, Control>).
 //
-// V13에서 controls 는 Record<string, SceneControls.Control> 객체이다.
-// 런타임 v13 의 비-토글 도구 콜백 필드는 `onClick: () => void` 이다
-// (출처: foundryvtt.wiki canvas 문서). 그러나 설치된 fvtt-types(13.346.0-beta)
-// SceneControls.Tool 선언에는 `onClick` 가 없고 `onChange` 만 있다 → fvtt-types 가
-// v13 런타임보다 뒤처져 있다. 또한 control-level `onClick` 도 선언되어 있지 않다.
-// 안전을 위해 onClick(런타임 정답) 을 control 과 tool 양쪽에 둔다.
-// fvtt-types 에 없는 onClick 필드만 좁은 범위로 캐스팅한다(전체 as any 금지).
-const open = () => void new HandoutPanel().render({ force: true });
-type WithOnClick = { onClick?: (...args: unknown[]) => void };
+// 패널은 싱글턴으로 재사용한다. 매 클릭마다 new 하면 동일 id(AppV2) 인스턴스가
+// 중복 생성되고, position.height:"auto" 측정이 분리된 프레임을 만나
+// _updatePosition 에서 offsetWidth(null) 로 크래시한다(재오픈 시 재현).
+// 닫혀 있으면 render, 떠 있으면 앞으로 가져온다(멱등) → 중복/분리렌더 차단.
+let panel: HandoutPanel | null = null;
+const open = () => {
+  panel ??= new HandoutPanel();
+  if (panel.rendered) panel.bringToFront?.();
+  else void panel.render({ force: true });
+};
+
+// V13 런타임 로그로 확인된 동작: onChange/onClick 둘 다 "클릭" 이벤트가 아니라
+// 컨트롤 활성상태 전이(active true↔false)에서만 발화하며 active 값을 인자로 받는다.
+// onClick 은 비활성화 시 [false] 로도 발화하므로 클릭 핸들러로 쓰면 "다른 컨트롤을
+// 선택하면 패널이 뜨는" 오발화가 난다 → onClick 은 쓰지 않고, onChange 에서
+// active===true 일 때만 연다(a[1] = active boolean). 활성 컨트롤 재클릭은 전이가
+// 없어 어떤 콜백도 부르지 않으므로, 재오픈은 패널 _onClose 가 컨트롤을 비활성화해
+// false→true 전이를 복원하는 방식으로 처리한다(handout-panel.ts).
+const onChange = (...a: unknown[]) => {
+  const active = a[1];
+  if (active) open();
+};
 
 Hooks.on("getSceneControlButtons", (controls) => {
-  const tool: foundry.applications.ui.SceneControls.Tool & WithOnClick = {
+  const tool: foundry.applications.ui.SceneControls.Tool = {
     name: "open-panel",
     order: 1,
     title: "SCH.Controls.OpenPanel",
     icon: "fa-solid fa-scroll",
     button: true,
-    onChange: open,
-    onClick: open,
+    onChange,
   };
-  const control: foundry.applications.ui.SceneControls.Control & WithOnClick = {
+  const control: foundry.applications.ui.SceneControls.Control = {
     name: "sch-handout-panel",
     order: 10,
     title: "SCH.Controls.HandoutPanel",
     icon: "fa-solid fa-scroll",
     visible: true,
     activeTool: "open-panel",
-    onChange: open,
-    onClick: open,
+    onChange,
     tools: { "open-panel": tool },
   };
   controls["sch-handout-panel"] = control;
