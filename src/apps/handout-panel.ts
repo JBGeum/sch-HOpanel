@@ -16,6 +16,15 @@ function escapeHtml(s: string): string {
   ));
 }
 
+/**
+ * DialogV2 콜백 인자에서 루트 HTMLElement 를 얻는다.
+ * fvtt-types 의 RenderCallback/ButtonCallback 시그니처는 element 를 노출하지 않으므로,
+ * ApplicationV2 의 element(HTMLElement)로 좁히는 캐스트를 이 한 곳에 모은다.
+ */
+function dialogEl(dialog: unknown): HTMLElement {
+  return (dialog as { element: HTMLElement }).element;
+}
+
 interface PanelContext extends foundry.applications.api.ApplicationV2.RenderContext {
   theme: string;
   isDark: boolean;
@@ -251,7 +260,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       rejectClose: false,
       // 동적 토글: kind 변경 시 actorId 행 표시/숨김.
       render: (_event, dialog) => {
-        const el = (dialog as unknown as { element: HTMLElement }).element;
+        const el = dialogEl(dialog);
         const actorRow = el.querySelector<HTMLElement>(".sch-create-actor");
         el.querySelectorAll<HTMLInputElement>('input[name="kind"]').forEach((radio) => {
           radio.addEventListener("change", () => {
@@ -273,7 +282,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             _button: HTMLButtonElement,
             dialog: foundry.applications.api.DialogV2.Any,
           ) => {
-            const el = (dialog as unknown as { element: HTMLElement }).element;
+            const el = dialogEl(dialog);
             const kind = (el.querySelector<HTMLInputElement>('input[name="kind"]:checked')?.value ??
               "floating") as HandoutKind;
             const actorId = el.querySelector<HTMLSelectElement>('select[name="actorId"]')?.value ?? "";
@@ -331,7 +340,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             _button: HTMLButtonElement,
             dialog: foundry.applications.api.DialogV2.Any,
           ) => {
-            const dlgEl = (dialog as unknown as { element: HTMLElement }).element;
+            const dlgEl = dialogEl(dialog);
             return Array.from(
               dlgEl.querySelectorAll<HTMLInputElement>('input[name="actor"]:checked:not([disabled])'),
             ).map((el) => el.value);
