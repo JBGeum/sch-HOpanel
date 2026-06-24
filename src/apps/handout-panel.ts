@@ -25,6 +25,27 @@ function dialogEl(dialog: unknown): HTMLElement {
   return (dialog as { element: HTMLElement }).element;
 }
 
+/** 플레이어 소유 액터 목록 → <option> 문자열. selectedId 와 일치하는 option 에 selected. */
+function buildActorOptions(pcs: Actor[], selectedId?: string): string {
+  return pcs
+    .map((a) => {
+      const id = a.id ?? "";
+      const sel = selectedId !== undefined && id === selectedId ? " selected" : "";
+      return `<option value="${escapeHtml(id)}"${sel}>${escapeHtml(a.name ?? "(알 수 없음)")}</option>`;
+    })
+    .join("");
+}
+
+/** categoryDict → <option> 문자열. selectedKeys 에 포함된 키의 option 에 selected. */
+function buildTagOptions(dict: CategoryDict, selectedKeys: string[] = []): string {
+  return Object.entries(dict)
+    .map(([key, def]) => {
+      const sel = selectedKeys.includes(key) ? " selected" : "";
+      return `<option value="${escapeHtml(key)}"${sel}>${escapeHtml(def.label)}</option>`;
+    })
+    .join("");
+}
+
 interface PanelContext extends foundry.applications.api.ApplicationV2.RenderContext {
   theme: string;
   isDark: boolean;
@@ -227,12 +248,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
     const hasPc = pcs.length > 0;
 
-    const actorOptions = pcs
-      .map((a) => `<option value="${escapeHtml(a.id ?? "")}">${escapeHtml(a.name ?? "(알 수 없음)")}</option>`)
-      .join("");
-    const tagOptions = Object.entries(dict)
-      .map(([key, def]) => `<option value="${escapeHtml(key)}">${escapeHtml(def.label)}</option>`)
-      .join("");
+    const actorOptions = buildActorOptions(pcs);
+    const tagOptions = buildTagOptions(dict);
 
     const pcAttrs = hasPc ? "checked" : "disabled";
     const floatingAttrs = hasPc ? "" : "checked";
