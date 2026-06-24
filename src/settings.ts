@@ -1,26 +1,32 @@
 import { MODULE_ID, SETTINGS, type SettingKey } from "./constants";
+import type { CategoryDict } from "./handout/handout-flags";
 
-/**
- * game.settings 등록. init Hook 에서 호출한다.
- * 새 설정을 추가할 때 이 함수에 register 호출을 한 줄 더 넣는다.
- */
+/** 카테고리 사전 기본값(spec §7-3). tone 은 _tokens 의 톤 키. */
+export const DEFAULT_CATEGORY_DICT: CategoryDict = {
+  main: { label: "메인", tone: "rose" },
+  sub: { label: "서브", tone: "blue" },
+  yokai: { label: "괴이", tone: "violet" },
+  place: { label: "장소", tone: "teal" },
+  clue: { label: "복선", tone: "amber" },
+};
+
 export function registerSettings(): void {
-  game.settings.register(MODULE_ID, SETTINGS.welcomed, {
-    name: "SCH.Settings.Welcomed.Name",
-    hint: "SCH.Settings.Welcomed.Hint",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: false,
+  game.settings.register(MODULE_ID, SETTINGS.theme, {
+    name: "SCH.Settings.Theme.Name",
+    hint: "SCH.Settings.Theme.Hint",
+    scope: "client",
+    config: false,
+    type: String,
+    default: "light",
   });
 
-  game.settings.register(MODULE_ID, SETTINGS.showHints, {
-    name: "SCH.Settings.ShowHints.Name",
-    hint: "SCH.Settings.ShowHints.Hint",
-    scope: "client",
-    config: true,
-    type: Boolean,
-    default: true,
+  game.settings.register(MODULE_ID, SETTINGS.categoryDict, {
+    name: "SCH.Settings.CategoryDict.Name",
+    hint: "SCH.Settings.CategoryDict.Hint",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: DEFAULT_CATEGORY_DICT,
   });
 
   game.settings.register(MODULE_ID, SETTINGS.debugMode, {
@@ -33,15 +39,10 @@ export function registerSettings(): void {
   });
 }
 
-/**
- * 타입 안전한 설정 읽기 헬퍼. 키에 따라 반환 값 타입이 자동 추론된다.
- * (foundry-config.d.ts 의 SettingConfig 선언이 근거)
- */
 export function getSetting<K extends SettingKey>(key: K) {
   return game.settings.get(MODULE_ID, key);
 }
 
-/** 타입 안전한 설정 쓰기 헬퍼. 키에 맞는 값 타입만 허용된다. */
 export function setSetting<K extends SettingKey>(
   key: K,
   value: foundry.helpers.ClientSettings.SettingCreateData<typeof MODULE_ID, K>,

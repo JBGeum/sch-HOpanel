@@ -22,17 +22,36 @@ declare module "fvtt-types/configuration" {
 
   /** game.settings.register/get/set 에서 사용할 설정 키와 값 타입. */
   interface SettingConfig {
-    "sch-handout-panel.welcomed": boolean;
-    "sch-handout-panel.showHints": boolean;
+    "sch-handout-panel.theme": string;
+    "sch-handout-panel.categoryDict": Record<string, { label: string; tone: string }>;
     "sch-handout-panel.debugMode": boolean;
   }
 
-  /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입. */
+  /**
+   * JournalEntry flag 타입 선언. JournalEntry.getFlag / setFlag 에서 타입이 추론된다.
+   * 구조: FlagConfig[DocumentName][Scope][FlagKey] = ValueType
+   */
+  interface FlagConfig {
+    JournalEntry: {
+      "sch-handout-panel": {
+        owner: { kind: "actor" | "gm"; actorId?: string };
+        kind: "pc" | "floating";
+        tags: string[];
+        revealState: {
+          surface: { mode: "all" | "limited" | "hidden"; revealedTo: string[] };
+          secret: { mode: "owner" | "limited" | "all"; revealedTo: string[] };
+        };
+      };
+    };
+  }
+
+  /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입.
+   *  NOTE: api 는 Task 5 에서 import("./api/index").HandoutApi 로 교체한다.
+   *        현재는 circular-reference 방지를 위해 unknown 으로 임시 선언.
+   */
   interface ModuleConfig {
     "sch-handout-panel": {
-      api: {
-        openExample: () => void;
-      };
+      api: unknown;
     };
   }
 }
