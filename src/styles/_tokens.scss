@@ -137,22 +137,22 @@ $shp-theme-dark: (
 //       비밀(secret):  owner=slate / limited=blue / all=violet
 // -------------------------------------------------------------
 $shp-tones-light: (
-  green:  (bg:#e7f3ec, fg:#1f7a4d, dot:#2faa6a, bd:#cfe6da),
-  amber:  (bg:#f6efda, fg:#8a6a1e, dot:#c79a2e, bd:#ebdcb8),
-  rose:   (bg:#f7e7e5, fg:#a23b34, dot:#d05a50, bd:#eccbc6),
-  slate:  (bg:#edeef1, fg:#5a6270, dot:#8b93a1, bd:#dcdee3),
-  blue:   (bg:#e6edfa, fg:#2f55b8, dot:#4f78e0, bd:#cdd9f3),
-  violet: (bg:#f0e9f8, fg:#6e3fb0, dot:#9968d8, bd:#e0d3f0),
-  teal:   (bg:#e1f1f0, fg:#1d7873, dot:#34a8a0, bd:#c6e6e3),
+  "green":  (bg:#e7f3ec, fg:#1f7a4d, dot:#2faa6a, bd:#cfe6da),
+  "amber":  (bg:#f6efda, fg:#8a6a1e, dot:#c79a2e, bd:#ebdcb8),
+  "rose":   (bg:#f7e7e5, fg:#a23b34, dot:#d05a50, bd:#eccbc6),
+  "slate":  (bg:#edeef1, fg:#5a6270, dot:#8b93a1, bd:#dcdee3),
+  "blue":   (bg:#e6edfa, fg:#2f55b8, dot:#4f78e0, bd:#cdd9f3),
+  "violet": (bg:#f0e9f8, fg:#6e3fb0, dot:#9968d8, bd:#e0d3f0),
+  "teal":   (bg:#e1f1f0, fg:#1d7873, dot:#34a8a0, bd:#c6e6e3),
 );
 $shp-tones-dark: (
-  green:  (bg:#18352a, fg:#5cc99a, dot:#3fae7d, bd:#214a3a),
-  amber:  (bg:#352c16, fg:#d7b25a, dot:#c79a2e, bd:#4a3d1e),
-  rose:   (bg:#3a201d, fg:#e08a82, dot:#d05a50, bd:#532d28),
-  slate:  (bg:#262a32, fg:#aab2c0, dot:#7b8492, bd:#363b45),
-  blue:   (bg:#1c2747, fg:#8fb0f2, dot:#5f86e6, bd:#2a3a63),
-  violet: (bg:#2c2342, fg:#bd9be8, dot:#9968d8, bd:#3e3260),
-  teal:   (bg:#16302e, fg:#52bdb4, dot:#34a8a0, bd:#214a46),
+  "green":  (bg:#18352a, fg:#5cc99a, dot:#3fae7d, bd:#214a3a),
+  "amber":  (bg:#352c16, fg:#d7b25a, dot:#c79a2e, bd:#4a3d1e),
+  "rose":   (bg:#3a201d, fg:#e08a82, dot:#d05a50, bd:#532d28),
+  "slate":  (bg:#262a32, fg:#aab2c0, dot:#7b8492, bd:#363b45),
+  "blue":   (bg:#1c2747, fg:#8fb0f2, dot:#5f86e6, bd:#2a3a63),
+  "violet": (bg:#2c2342, fg:#bd9be8, dot:#9968d8, bd:#3e3260),
+  "teal":   (bg:#16302e, fg:#52bdb4, dot:#34a8a0, bd:#214a46),
 );
 
 // 상태 -> 톤 의미 매핑 (테마 무관, 구조적)
