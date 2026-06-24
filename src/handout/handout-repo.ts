@@ -185,25 +185,31 @@ export async function createHandoutDoc(args: {
 }
 
 /**
- * Applies a new RevealState to a HandoutDoc:
- * 1. Persists the new revealState flag on the JournalEntry.
- * 2. Re-derives ownership via computeOwnership and updates BOTH pages.
- *
- * This ensures the single-source-of-truth constraint: ownership is never
- * set directly, always derived from the current flags.
+ * 부분 flag 변경을 적용하고 ownership 을 재파생한다(가시성 변경의 단일 경로).
+ * 1. partial 을 현재 flags 에 병합 → deriveOwnership 으로 surface/secret/entry 맵 재계산.
+ * 2. 변경된 flag 를 먼저 persist(merge)해 저장 상태가 파생 ownership 과 일치하게 한 뒤,
+ *    entry + 두 page 의 ownership 을 갱신.
+ * ownership 은 절대 직접 편집하지 않는다(불변식). revealState/meta 두 경로가 공유한다.
  */
-export async function applyRevealState(doc: HandoutDoc, next: RevealState): Promise<void> {
-  // Compose updated flags locally for ownership derivation (do not mutate doc).
-  const updatedFlags: HandoutFlags = { ...doc.flags, revealState: next };
+export async function applyFlagsUpdate(doc: HandoutDoc, partial: Partial<HandoutFlags>): Promise<void> {
+  const updatedFlags: HandoutFlags = { ...doc.flags, ...partial };
   const ownership = deriveOwnership(updatedFlags);
 
-  // Persist flag first so the entry's stored state matches the derived ownership.
-  await doc.entry.setFlag(FLAG_SCOPE, "revealState", next);
-  // Update entry ownership (derived as element-wise MAX of surface and secret maps).
+  // 변경된 flag 만 merge persist(create 가 쓰는 { [FLAG_SCOPE]: flags } 와 동일 패턴).
+  await doc.entry.update({ flags: { [FLAG_SCOPE]: partial } });
+  // entry ownership(= surface·secret element-wise MAX) 갱신.
   await doc.entry.update({ ownership: ownership.entry });
-  // Update both pages' ownership to match the newly derived maps.
+  // 두 page ownership 을 새 맵으로 갱신.
   if (doc.surfacePage) await doc.surfacePage.update({ ownership: ownership.surface });
   if (doc.secretPage) await doc.secretPage.update({ ownership: ownership.secret });
+}
+
+/**
+ * 새 RevealState 를 적용한다. applyFlagsUpdate 위임(시그니처/동작 유지).
+ * 호출부(api.revealSecret)는 변경 없음.
+ */
+export async function applyRevealState(doc: HandoutDoc, next: RevealState): Promise<void> {
+  await applyFlagsUpdate(doc, { revealState: next });
 }
 
 /**
