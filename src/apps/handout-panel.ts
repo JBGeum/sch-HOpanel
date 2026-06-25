@@ -141,6 +141,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       retract: HandoutPanel._onRetract,
       filter: HandoutPanel._onFilter,
       "set-view": HandoutPanel._onSetView,
+      share: HandoutPanel._onShare,
     },
   };
 
@@ -363,6 +364,29 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     log.info("retractSecret requested", id);
     void this.render();
+  }
+
+  /**
+   * 채팅 게시(GM 전용). area=surface 는 바로, secret 은 확인 후 전체 공개 게시.
+   * 채팅에만 영향 → 패널 재렌더 없음.
+   */
+  protected static async _onShare(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
+    const id = target.dataset.handoutId;
+    const area = target.dataset.area as "surface" | "secret" | undefined;
+    if (!id || (area !== "surface" && area !== "secret")) return;
+    const api = game.modules.get(MODULE_ID)?.api;
+    if (area === "secret") {
+      const confirmed = await DialogV2.confirm(withDialogTheme({
+        window: { title: "비밀 채팅 게시" },
+        content: `<div class="shp-dialog-body shp-dialog-body--message">비밀 내용을 전체 채팅에 공개합니다. <b class="shp-warn">되돌릴 수 없습니다.</b></div>`,
+        yes: { label: "게시", class: "shp-dbtn shp-dbtn--danger" },
+        no: { label: "취소", class: "shp-dbtn" },
+        rejectClose: false,
+      }));
+      if (!confirmed) return;
+    }
+    await api?.shareToChat(id, area);
+    log.info("shareToChat requested", id, area);
   }
 
   /**
