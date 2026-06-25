@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripHtml, searchTier, filterViews, groupViewsByKind } from "../src/handout/handout-filter";
+import { stripHtml, searchTier, filterViews, groupViewsByKind, aggregateFooter } from "../src/handout/handout-filter";
 import type { HandoutView } from "../src/handout/handout-view";
 
 function mk(over: Partial<HandoutView>): HandoutView {
@@ -93,5 +93,26 @@ describe("groupViewsByKind", () => {
   it("omits a kind with no rows", () => {
     const g = groupViewsByKind([mk({ kind: "pc" })]);
     expect(g.map((x) => x.kind)).toEqual(["pc"]);
+  });
+});
+
+describe("aggregateFooter", () => {
+  it("counts total, pc, floating", () => {
+    const a = mk({ kind: "pc" });
+    const b = mk({ kind: "floating" });
+    const c = mk({ kind: "pc" });
+    const agg = aggregateFooter([a, b, c]);
+    expect(agg.total).toBe(3);
+    expect(agg.pc).toBe(2);
+    expect(agg.floating).toBe(1);
+  });
+  it("pending counts only secretRevealed === false", () => {
+    const a = mk({ secretRevealed: false });
+    const b = mk({ secretRevealed: true });
+    const c = mk({ secretRevealed: false });
+    expect(aggregateFooter([a, b, c]).pending).toBe(2);
+  });
+  it("empty array → all zero", () => {
+    expect(aggregateFooter([])).toEqual({ total: 0, pc: 0, floating: 0, pending: 0 });
   });
 });

@@ -57,3 +57,18 @@ export function groupViewsByKind<T extends HandoutView>(
     rows: views.filter((v) => v.kind === kind),
   })).filter((g) => g.rows.length > 0);
 }
+
+/** 푸터 집계: 총계·종류별·공개 대기(비밀 미공개) 수. 필터된 목록 기준. */
+export function aggregateFooter(views: HandoutView[]): {
+  total: number;
+  pc: number;
+  floating: number;
+  pending: number;
+} {
+  return {
+    total: views.length,
+    pc: views.filter((v) => v.kind === "pc").length,
+    floating: views.filter((v) => v.kind === "floating").length,
+    pending: views.filter((v) => !v.secretRevealed).length,
+  };
+}
