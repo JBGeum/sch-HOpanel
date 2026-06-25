@@ -43,6 +43,7 @@
 
     <div class="shp-actions">
       {{#if canManage}}<button class="shp-btn--reveal" data-action="reveal" data-handout-id="{{id}}" type="button">＋ 공개</button>{{/if}}
+      {{#if @root.isGM}}{{#if secretRevealed}}<button class="shp-btn shp-btn--danger" data-action="retract" data-handout-id="{{id}}" type="button">회수</button>{{/if}}{{/if}}
       <span class="shp-actions__spacer"></span>
       <button class="shp-btn" data-action="open-sheet" data-handout-id="{{id}}" type="button">시트 열기</button>
       {{#if @root.isGM}}
