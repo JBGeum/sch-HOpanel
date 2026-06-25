@@ -89,6 +89,20 @@ $r: $shp-radius;
     padding: 7px 10px;
     color: var(--shp-placeholder);
     font-size: 12px;
+
+    // 내부 input 은 Foundry 기본 var(--input-background-color)(어두움)를 쓰므로,
+    // 라벨 박스(--shp-input-bg) 위에서 투명 처리하고 텍스트 색만 지정한다.
+    input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--shp-text);
+      font-family: $shp-font;
+      font-size: 12px;
+      &::placeholder { color: var(--shp-placeholder); }
+    }
   }
 }
 

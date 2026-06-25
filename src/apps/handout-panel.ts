@@ -114,6 +114,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #activeTag = "";
   #view: "list" | "group" = "list";
   #searchFocused = false;
+  /** 검색 재렌더 디바운스 타이머. 매 키 입력마다 전체 재렌더하면 input 이 재생성돼 IME 조합·캐럿이 깨지므로, 타이핑이 멈춘 뒤에만 렌더한다. */
+  #searchTimer: number | null = null;
+  /** IME 조합 중 여부. 조합 중에는 재렌더하지 않는다(한글 자모 조합 보호). */
+  #composing = false;
 
   static override DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2.DefaultOptions = {
     id: "sch-handout-panel",
@@ -221,15 +225,38 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     this.element.dataset.theme = theme;
     const search = this.element.querySelector<HTMLInputElement>('input[name="q"]');
     if (search) {
-      search.addEventListener("input", () => {
+      // 타이핑이 멈춘 뒤에만 재렌더(디바운스). 조합 중이면 미뤘다 끝나고 렌더.
+      const scheduleRender = (): void => {
+        if (this.#searchTimer !== null) clearTimeout(this.#searchTimer);
+        this.#searchTimer = window.setTimeout(() => {
+          this.#searchTimer = null;
+          if (this.#composing) {
+            scheduleRender();
+            return;
+          }
+          void this.render();
+        }, 200);
+      };
+      search.addEventListener("compositionstart", () => {
+        this.#composing = true;
+      });
+      search.addEventListener("compositionend", () => {
+        this.#composing = false;
         this.#query = search.value;
         this.#searchFocused = true;
-        void this.render();
+        scheduleRender();
+      });
+      search.addEventListener("input", () => {
+        // IME 조합 중 input 은 무시(compositionend 에서 확정 반영) → 조합 깨짐 방지.
+        if (this.#composing) return;
+        this.#query = search.value;
+        this.#searchFocused = true;
+        scheduleRender();
       });
       search.addEventListener("blur", () => {
         this.#searchFocused = false;
       });
-      // 라이브 검색 re-render 가 포커스를 잃으므로, 검색 중이었으면 복원(캐럿 끝).
+      // 디바운스 재렌더가 input 을 재생성하므로, 검색 중이었으면 포커스·캐럿(끝) 복원.
       if (this.#searchFocused) {
         search.focus();
         const len = search.value.length;
