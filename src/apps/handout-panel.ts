@@ -281,12 +281,12 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#focusScrollId = null;
       this.#focusFlash = new Set();
 
-      const row = this.element.querySelector<HTMLElement>(`[data-handout-id="${targetId}"]`);
+      const row = this.element.querySelector<HTMLElement>(`.shp-row[data-handout-id="${targetId}"]`);
       // 필터/검색으로 가려져 DOM 에 없으면 포커스 생략.
       if (row) {
         row.scrollIntoView({ block: "nearest" });
         for (const id of flashIds) {
-          const el = this.element.querySelector<HTMLElement>(`[data-handout-id="${id}"]`);
+          const el = this.element.querySelector<HTMLElement>(`.shp-row[data-handout-id="${id}"]`);
           if (!el) continue;
           el.classList.add("shp-row--flash");
           window.setTimeout(() => el.classList.remove("shp-row--flash"), 1500);
