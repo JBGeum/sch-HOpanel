@@ -290,26 +290,28 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const actorRowStyle = hasPc ? "" : "display:none";
 
     const content = `
-      <div class="sch-create-form">
-        <fieldset class="sch-create-kind">
+      <div class="shp-dialog-body">
+        <fieldset class="shp-fieldset">
           <legend>종류</legend>
-          <label><input type="radio" name="kind" value="pc" ${pcAttrs}> PC</label>
-          <label><input type="radio" name="kind" value="floating" ${floatingAttrs}> 떠도는</label>
+          <div class="shp-fieldset__opts">
+            <label class="shp-radio"><input type="radio" name="kind" value="pc" ${pcAttrs}><span class="shp-radio__box"></span> PC</label>
+            <label class="shp-radio"><input type="radio" name="kind" value="floating" ${floatingAttrs}><span class="shp-radio__box"></span> 떠도는</label>
+          </div>
         </fieldset>
-        <div class="sch-create-actor" style="${actorRowStyle}">
-          <label>소유자 액터<br><select name="actorId">${actorOptions}</select></label>
+        <div class="shp-field sch-create-actor" style="${actorRowStyle}">
+          <div class="shp-field__label">소유자 액터</div>
+          <select class="shp-select" name="actorId">${actorOptions}</select>
         </div>
-        <label>표면<br><textarea name="surface" rows="3"></textarea></label>
-        <label>비밀<br><textarea name="secret" rows="3"></textarea></label>
-        <label>태그<br><select name="tags" multiple size="4">${tagOptions}</select></label>
-        <label>추가 태그(쉼표 구분)<br><input type="text" name="freeTags"></label>
+        <div class="shp-field"><div class="shp-field__label">표면</div><textarea class="shp-textarea" name="surface" rows="3"></textarea></div>
+        <div class="shp-field"><div class="shp-field__label">비밀</div><textarea class="shp-textarea" name="secret" rows="3"></textarea></div>
+        <div class="shp-field"><div class="shp-field__label">태그</div><select class="shp-select" name="tags" multiple size="4">${tagOptions}</select></div>
+        <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags"></div>
       </div>`;
 
-    const result = await DialogV2.wait({
+    const result = await DialogV2.wait(withDialogTheme({
       window: { title: "핸드아웃 생성" },
       content,
       rejectClose: false,
-      // 동적 토글: kind 변경 시 actorId 행 표시/숨김.
       render: (_event, dialog) => {
         const el = dialogEl(dialog);
         const actorRow = el.querySelector<HTMLElement>(".sch-create-actor");
@@ -326,8 +328,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           action: "ok",
           label: "생성",
           icon: "fa-solid fa-check",
+          class: "shp-dbtn shp-dbtn--primary",
           default: true,
-          // Cast rationale: ButtonCallback 의 dialog 는 DialogV2.Any. element 는 HTMLElement.
           callback: (
             _event: PointerEvent | SubmitEvent,
             _button: HTMLButtonElement,
@@ -347,9 +349,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             return out;
           },
         },
-        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark" },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark", class: "shp-dbtn" },
       ],
-    });
+    }));
 
     // result: CreateFormResult(ok) | "cancel"(취소) | null(dismiss)
     if (!result || typeof result === "string") return null;
@@ -423,24 +425,26 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const actorRowStyle = showActor ? "" : "display:none";
 
     const content = `
-      <div class="sch-edit-form">
-        <fieldset class="sch-edit-kind">
+      <div class="shp-dialog-body">
+        <fieldset class="shp-fieldset">
           <legend>종류</legend>
-          <label><input type="radio" name="kind" value="pc"${pcChecked}${pcDisabled}> PC</label>
-          <label><input type="radio" name="kind" value="floating"${floatingChecked}> 떠도는</label>
+          <div class="shp-fieldset__opts">
+            <label class="shp-radio"><input type="radio" name="kind" value="pc"${pcChecked}${pcDisabled}><span class="shp-radio__box"></span> PC</label>
+            <label class="shp-radio"><input type="radio" name="kind" value="floating"${floatingChecked}><span class="shp-radio__box"></span> 떠도는</label>
+          </div>
         </fieldset>
-        <div class="sch-edit-actor" style="${actorRowStyle}">
-          <label>소유자 액터<br><select name="actorId">${buildActorOptions(pcs, currentActorId)}</select></label>
+        <div class="shp-field sch-edit-actor" style="${actorRowStyle}">
+          <div class="shp-field__label">소유자 액터</div>
+          <select class="shp-select" name="actorId">${buildActorOptions(pcs, currentActorId)}</select>
         </div>
-        <label>태그<br><select name="tags" multiple size="4">${buildTagOptions(dict, selectedTags)}</select></label>
-        <label>추가 태그(쉼표 구분)<br><input type="text" name="freeTags" value="${escapeHtml(freeTagsValue)}"></label>
+        <div class="shp-field"><div class="shp-field__label">태그</div><select class="shp-select" name="tags" multiple size="4">${buildTagOptions(dict, selectedTags)}</select></div>
+        <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags" value="${escapeHtml(freeTagsValue)}"></div>
       </div>`;
 
-    const result = await DialogV2.wait({
+    const result = await DialogV2.wait(withDialogTheme({
       window: { title: "핸드아웃 편집" },
       content,
       rejectClose: false,
-      // 동적 토글: kind 변경 시 actorId 행 표시/숨김.
       render: (_event, dialog) => {
         const el = dialogEl(dialog);
         const actorRow = el.querySelector<HTMLElement>(".sch-edit-actor");
@@ -457,8 +461,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           action: "ok",
           label: "저장",
           icon: "fa-solid fa-check",
+          class: "shp-dbtn shp-dbtn--primary",
           default: true,
-          // Cast rationale: ButtonCallback 의 dialog 는 DialogV2.Any. element 는 HTMLElement.
           callback: (
             _event: PointerEvent | SubmitEvent,
             _button: HTMLButtonElement,
@@ -476,9 +480,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             return out;
           },
         },
-        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark" },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark", class: "shp-dbtn" },
       ],
-    });
+    }));
 
     if (!result || typeof result === "string") return null;
     return result as EditFormResult;
