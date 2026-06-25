@@ -25,6 +25,7 @@ export interface HandoutView {
   surfaceContent: string;
   secretContent: string | null;
   secretLocked: boolean;
+  secretRevealed: boolean;
   canManage: boolean;
 }
 
@@ -90,6 +91,7 @@ export function toHandoutView(doc: HandoutDoc, dict: CategoryDict = {}): Handout
     surfaceContent: surfacePage?.text?.content ?? "",
     secretContent: secretReadable ? secretPage?.text?.content ?? "" : null,
     secretLocked: !secretReadable,
+    secretRevealed: rs.secret.mode !== "owner",
     canManage: manage,
   };
 }
