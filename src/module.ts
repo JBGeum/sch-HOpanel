@@ -1,8 +1,11 @@
-import { MODULE_ID } from "./constants";
-import { registerSettings } from "./settings";
+import { MODULE_ID, SETTINGS } from "./constants";
+import { registerSettings, getSetting, DEFAULT_CATEGORY_DICT } from "./settings";
 import { log } from "./utils/logger";
 import { buildApi } from "./api/index";
 import { HandoutPanel } from "./apps/handout-panel";
+import { listVisibleViews, type HandoutView } from "./handout/handout-view";
+import { buildFingerprint, diffReveals } from "./handout/reveal-detect";
+import { isHandout, type CategoryDict } from "./handout/handout-flags";
 import "./styles/main.scss";
 
 // 공개 API 타입은 src/foundry-config.d.ts 의 ModuleConfig 에 선언한다.
@@ -22,6 +25,13 @@ Hooks.once("ready", () => {
   log.info("Ready");
   const mod = game.modules.get(MODULE_ID);
   if (mod) mod.api = buildApi();
+
+  // 패널 반응성 초기화: 기준 지문을 먼저 잡고(패널 열림과 무관) 문서 변경 훅을 구독한다.
+  lastFingerprint = buildFingerprint(listVisibleViews(currentDict()));
+  Hooks.on("updateJournalEntry", onJournalMaybeHandout);
+  Hooks.on("createJournalEntry", onJournalMaybeHandout);
+  Hooks.on("deleteJournalEntry", onJournalMaybeHandout);
+  Hooks.on("updateJournalEntryPage", onPageMaybeHandout);
 });
 
 // Scene Controls 툴바에 패널 열기 버튼 등록 (V13: controls 는 Record<name, Control>).
@@ -48,6 +58,54 @@ const onChange = (...a: unknown[]) => {
   const active = a[1];
   if (active) open();
 };
+
+// ── 패널 반응성 ──────────────────────────────────────────────────────────
+// 가시성 변경(applyFlagsUpdate)은 모든 클라이언트에 updateJournalEntry/Page 를 발화한다.
+// ownership diff 를 직접 파싱하지 않고, "나에게 보이는 집합"을 재계산해 직전 지문과
+// 비교한다(견고). 디바운스로 버스트(다중 공개)를 1회로 합친다. 어떤 쓰기도 하지 않는다.
+let lastFingerprint = new Map<string, boolean>();
+let reactTimer: number | null = null;
+
+const currentDict = (): CategoryDict =>
+  (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
+
+// 새 공개 토스트. 1건이면 이름 포함, N건이면 개수. 토스트 클릭 시 패널 열기(best-effort).
+function notifyReveal(revealedIds: string[], views: HandoutView[]): void {
+  const message =
+    revealedIds.length === 1
+      ? `새 핸드아웃이 공개되었습니다: ${views.find((v) => v.id === revealedIds[0])?.name || "핸드아웃"}`
+      : `${revealedIds.length}개의 새 핸드아웃이 공개되었습니다`;
+  const n = ui.notifications?.info(message);
+  // 토스트 클릭으로 패널 열기. element 는 렌더 후 채워지므로(fvtt-types: HTMLLIElement?)
+  // 다음 틱에 바인딩 시도한다. 미지원이어도 토스트 정보는 유지되고 Scene Control 로 열 수 있다.
+  window.setTimeout(() => {
+    n?.element?.addEventListener("click", () => open());
+  }, 100);
+}
+
+function reactToHandoutChange(): void {
+  if (reactTimer !== null) clearTimeout(reactTimer);
+  reactTimer = window.setTimeout(() => {
+    reactTimer = null;
+    const views = listVisibleViews(currentDict());
+    const next = buildFingerprint(views);
+    const { revealedIds } = diffReveals(lastFingerprint, next);
+    // ① 열린 패널 새로고침(역할 무관)
+    if (panel?.rendered) void panel.render();
+    // ② 비-GM 에게만 새 공개 토스트
+    if (!game.user?.isGM && revealedIds.length > 0) notifyReveal(revealedIds, views);
+    lastFingerprint = next;
+  }, 250);
+}
+
+// 훅 가드: 우리 핸드아웃 문서일 때만 반응.
+function onJournalMaybeHandout(entry: JournalEntry): void {
+  if (isHandout(entry)) reactToHandoutChange();
+}
+function onPageMaybeHandout(page: JournalEntryPage): void {
+  const entry = page.parent;
+  if (entry && isHandout(entry)) reactToHandoutChange();
+}
 
 Hooks.on("getSceneControlButtons", (controls) => {
   const tool: foundry.applications.ui.SceneControls.Tool = {
