@@ -155,15 +155,21 @@ $r: $shp-radius;
   &__opt {
     padding: 4px 11px;
     font-size: 11px; font-weight: 600;
+    font-family: $shp-font;
     background: var(--shp-seg-off-bg);
     color: var(--shp-seg-off-tx);
+    border: 0;
     cursor: pointer;
     & + & { border-left: 1px solid var(--shp-border-soft); }
-    &[aria-pressed="true"] {
-      font-weight: 700;
-      background: var(--shp-seg-on-bg);
-      color: var(--shp-seg-on-tx);
-    }
+  }
+
+  // 활성: 컨테이너 data-active 가 버튼 data-mode 와 일치(Handlebars 비교 헬퍼 불필요)
+  &[data-active="all"]     &__opt[data-mode="all"],
+  &[data-active="limited"] &__opt[data-mode="limited"],
+  &[data-active="hidden"]  &__opt[data-mode="hidden"] {
+    font-weight: 700;
+    background: var(--shp-seg-on-bg);
+    color: var(--shp-seg-on-tx);
   }
 }
 
