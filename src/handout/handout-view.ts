@@ -73,7 +73,7 @@ export function toHandoutView(doc: HandoutDoc, dict: CategoryDict = {}): Handout
   const ownerName =
     flags.owner.kind === "actor" && flags.owner.actorId
       ? game.actors?.get(flags.owner.actorId)?.name ?? "(알 수 없음)"
-      : "GM";
+      : "공용";
 
   const manage = canManage(doc);
   const secretReadable = manage || secretCanObserve(doc);
@@ -82,7 +82,7 @@ export function toHandoutView(doc: HandoutDoc, dict: CategoryDict = {}): Handout
     id: entry.id ?? "",
     name: entry.name ?? "",
     kind: flags.kind,
-    typeLabel: flags.kind === "pc" ? "PC" : "떠도는",
+    typeLabel: flags.kind === "pc" ? "PC" : "공용",
     ownerName,
     tags: resolveTags(flags.tags, dict),
     surfaceChip: surfaceChip(rs.surface.mode, rs.surface.revealedTo.length),
