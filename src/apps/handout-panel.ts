@@ -1,7 +1,7 @@
 import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
-import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
-import { toHandoutView, type HandoutView } from "../handout/handout-view";
+import { getHandoutDoc, type HandoutDoc } from "../handout/handout-repo";
+import { listVisibleViews, type HandoutView } from "../handout/handout-view";
 import { filterViews, groupViewsByKind, aggregateFooter } from "../handout/handout-filter";
 import { parseTags, splitTagsForEdit } from "../handout/handout-create";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
@@ -185,11 +185,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       (getSetting(SETTINGS.categoryDict) as Record<string, { label: string; tone: string }>) ??
       DEFAULT_CATEGORY_DICT;
 
-    const visible = listHandoutDocs()
-      .map((doc) => toHandoutView(doc, dict))
-      .filter((v): v is HandoutView => v !== null)
-      // 표면 hidden 이고 관리 불가면 카드 미표시(§6-5)
-      .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage));
+    // 보이는 집합 계산은 listVisibleViews 단일 출처(반응성 핸들러와 공유).
+    const visible = listVisibleViews(dict);
 
     const filtered = filterViews(visible, { query: this.#query, tag: this.#activeTag });
     const rows: PanelRow[] = filtered.map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));

@@ -1,6 +1,6 @@
 import type { SecretMode, SurfaceMode } from "./reveal-state";
 import type { CategoryDict } from "./handout-flags";
-import { canManage, type HandoutDoc } from "./handout-repo";
+import { canManage, listHandoutDocs, type HandoutDoc } from "./handout-repo";
 
 export interface Chip {
   area: "surface" | "secret";
@@ -102,4 +102,16 @@ function secretCanObserve(doc: HandoutDoc): boolean {
   const o = doc.secretPage?.ownership ?? {};
   const level = (o as Record<string, number>)[uid] ?? (o as Record<string, number>).default ?? 0;
   return level >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
+}
+
+/**
+ * 현재 유저에게 "보이는" 핸드아웃 view 목록.
+ * 패널 _prepareContext 와 반응성 핸들러가 공유하는 단일 가시성 출처.
+ * 표면 hidden 이고 관리 불가면 카드 자체를 제외한다(비권한자 미표시).
+ */
+export function listVisibleViews(dict: CategoryDict = {}): HandoutView[] {
+  return listHandoutDocs()
+    .map((doc) => toHandoutView(doc, dict))
+    .filter((v): v is HandoutView => v !== null)
+    .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage));
 }
