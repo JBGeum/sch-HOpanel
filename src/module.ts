@@ -47,6 +47,18 @@ const open = () => {
   else void panel.render({ force: true });
 };
 
+// 닫힘→열기: 포커스 예약 후 (없으면)강제 오픈. 첫 _onRender 가 포커스를 소비한다.
+const openWithFocus = (ids: string[]): void => {
+  panel ??= new HandoutPanel();
+  panel.setPendingFocus(ids);
+  if (panel.rendered) {
+    panel.bringToFront?.();
+    void panel.render();
+  } else {
+    void panel.render({ force: true });
+  }
+};
+
 // V13 런타임 로그로 확인된 동작: onChange/onClick 둘 다 "클릭" 이벤트가 아니라
 // 컨트롤 활성상태 전이(active true↔false)에서만 발화하며 active 값을 인자로 받는다.
 // onClick 은 비활성화 시 [false] 로도 발화하므로 클릭 핸들러로 쓰면 "다른 컨트롤을
@@ -79,7 +91,7 @@ function notifyReveal(revealedIds: string[], views: HandoutView[]): void {
   // 토스트 클릭으로 패널 열기. element 는 렌더 후 채워지므로(fvtt-types: HTMLLIElement?)
   // 다음 틱에 바인딩 시도한다. 미지원이어도 토스트 정보는 유지되고 Scene Control 로 열 수 있다.
   window.setTimeout(() => {
-    n?.element?.addEventListener("click", () => open());
+    n?.element?.addEventListener("click", () => openWithFocus(revealedIds));
   }, 100);
 }
 
@@ -90,8 +102,11 @@ function reactToHandoutChange(): void {
     const views = listVisibleViews(currentDict());
     const next = buildFingerprint(views);
     const { revealedIds } = diffReveals(lastFingerprint, next);
-    // ① 열린 패널 새로고침(역할 무관)
-    if (panel?.rendered) void panel.render();
+    // ① 열린 패널: 새 공개가 있으면 포커스(스크롤+펼침+펄스), 없으면 단순 새로고침.
+    if (panel?.rendered) {
+      if (revealedIds.length > 0) panel.focusReveals(revealedIds);
+      else void panel.render();
+    }
     // ② 비-GM 에게만 새 공개 토스트
     if (!game.user?.isGM && revealedIds.length > 0) notifyReveal(revealedIds, views);
     lastFingerprint = next;
