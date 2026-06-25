@@ -25,12 +25,13 @@ export interface HandoutApi {
     tags?: string[];
     surface?: string;
     secret?: string;
+    name?: string;
   }): Promise<HandoutView>;
   revealSecret(id: string, targetActorIds: string[]): Promise<void>;
   deleteHandout(id: string): Promise<void>;
   updateHandoutMeta(
     id: string,
-    meta: { owner: Owner; kind: HandoutKind; tags: string[] },
+    meta: { owner: Owner; kind: HandoutKind; tags: string[]; name: string },
   ): Promise<void>;
   setSurfaceVisibility(
     id: string,
@@ -99,7 +100,11 @@ export function buildApi(): HandoutApi {
       if (!game.user?.isGM) throw new Error("updateHandoutMeta: GM only");
       const doc = getHandoutDoc(id);
       if (!doc) throw new Error(`updateHandoutMeta: handout not found: ${id}`);
-      await applyFlagsUpdate(doc, meta);
+      // name 은 flag 가 아니라 entry 필드 → flags 와 분리해 처리(가시성/ownership 경로 불변).
+      const { name, ...flags } = meta;
+      await applyFlagsUpdate(doc, flags);
+      const nextName = name.trim() || (meta.kind === "pc" ? "PC 핸드아웃" : "공용 핸드아웃");
+      if (nextName !== doc.entry.name) await doc.entry.update({ name: nextName });
     },
 
     async setSurfaceVisibility(id, surface) {

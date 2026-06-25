@@ -151,6 +151,7 @@ export async function createHandoutDoc(args: {
   tags?: string[];
   surface?: string;
   secret?: string;
+  name?: string;
 }): Promise<HandoutDoc> {
   const folder = await ensureHandoutFolder();
   const flags = defaultFlags(args.owner, args.kind, args.tags ?? []);
@@ -159,7 +160,7 @@ export async function createHandoutDoc(args: {
   // JournalEntry.create returns JournalEntry | undefined; non-null assertion is safe
   // because Foundry throws on failure.
   const entry = (await JournalEntry.create({
-    name: args.kind === "pc" ? "PC 핸드아웃" : "떠도는 핸드아웃",
+    name: args.name?.trim() || (args.kind === "pc" ? "PC 핸드아웃" : "공용 핸드아웃"),
     folder: folder.id,
     flags: { [FLAG_SCOPE]: flags },
     ownership: ownership.entry,

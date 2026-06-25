@@ -376,7 +376,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const owner: Owner =
       result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
     const api = game.modules.get(MODULE_ID)?.api;
-    await api?.updateHandoutMeta(id, { owner, kind: result.kind, tags });
+    await api?.updateHandoutMeta(id, { owner, kind: result.kind, tags, name: doc.entry.name });
     log.info("updateHandoutMeta requested", id, owner, tags);
     void this.render();
   }
