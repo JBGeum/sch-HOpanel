@@ -43,6 +43,8 @@ function withDialogTheme<C extends { classes?: string[]; render?: DialogRender |
   return {
     ...config,
     classes: [...(config.classes ?? []), "sch-handout-panel", "shp-dialog"],
+    // 기본 다이얼로그 폭(개별 config.position 으로 override 가능).
+    position: { width: 480, ...((config.position as Record<string, unknown>) ?? {}) },
     render,
   } as C;
 }
@@ -58,12 +60,12 @@ function buildActorOptions(pcs: Actor[], selectedId?: string): string {
     .join("");
 }
 
-/** categoryDict → <option> 문자열. selectedKeys 에 포함된 키의 option 에 selected. */
-function buildTagOptions(dict: CategoryDict, selectedKeys: string[] = []): string {
+/** categoryDict → .shp-check 체크박스 라벨 문자열. selectedKeys 의 키는 checked. */
+function buildTagChecks(dict: CategoryDict, selectedKeys: string[] = []): string {
   return Object.entries(dict)
     .map(([key, def]) => {
-      const sel = selectedKeys.includes(key) ? " selected" : "";
-      return `<option value="${escapeHtml(key)}"${sel}>${escapeHtml(def.label)}</option>`;
+      const checked = selectedKeys.includes(key) ? " checked" : "";
+      return `<label class="shp-check"><input type="checkbox" name="tag" value="${escapeHtml(key)}"${checked}><span class="shp-check__box"></span> ${escapeHtml(def.label)}</label>`;
     })
     .join("");
 }
@@ -283,7 +285,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const hasPc = pcs.length > 0;
 
     const actorOptions = buildActorOptions(pcs);
-    const tagOptions = buildTagOptions(dict);
+    const tagChecks = buildTagChecks(dict);
 
     const pcAttrs = hasPc ? "checked" : "disabled";
     const floatingAttrs = hasPc ? "" : "checked";
@@ -304,7 +306,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         </div>
         <div class="shp-field"><div class="shp-field__label">표면</div><textarea class="shp-textarea" name="surface" rows="3"></textarea></div>
         <div class="shp-field"><div class="shp-field__label">비밀</div><textarea class="shp-textarea" name="secret" rows="3"></textarea></div>
-        <div class="shp-field"><div class="shp-field__label">태그</div><select class="shp-select" name="tags" multiple size="4">${tagOptions}</select></div>
+        <div class="shp-field"><div class="shp-field__label">태그</div><div class="shp-checklist shp-checklist--wrap">${tagChecks}</div></div>
         <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags"></div>
       </div>`;
 
@@ -342,7 +344,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             const surface = el.querySelector<HTMLTextAreaElement>('textarea[name="surface"]')?.value ?? "";
             const secret = el.querySelector<HTMLTextAreaElement>('textarea[name="secret"]')?.value ?? "";
             const tags = Array.from(
-              el.querySelectorAll<HTMLOptionElement>('select[name="tags"] option:checked'),
+              el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
             ).map((o) => o.value);
             const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
             const out: CreateFormResult = { kind, actorId, surface, secret, tags, freeTags };
@@ -437,7 +439,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           <div class="shp-field__label">소유자 액터</div>
           <select class="shp-select" name="actorId">${buildActorOptions(pcs, currentActorId)}</select>
         </div>
-        <div class="shp-field"><div class="shp-field__label">태그</div><select class="shp-select" name="tags" multiple size="4">${buildTagOptions(dict, selectedTags)}</select></div>
+        <div class="shp-field"><div class="shp-field__label">태그</div><div class="shp-checklist shp-checklist--wrap">${buildTagChecks(dict, selectedTags)}</div></div>
         <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags" value="${escapeHtml(freeTagsValue)}"></div>
       </div>`;
 
@@ -473,7 +475,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
               "floating") as HandoutKind;
             const actorId = el.querySelector<HTMLSelectElement>('select[name="actorId"]')?.value ?? "";
             const tags = Array.from(
-              el.querySelectorAll<HTMLOptionElement>('select[name="tags"] option:checked'),
+              el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
             ).map((o) => o.value);
             const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
             const out: EditFormResult = { kind, actorId, tags, freeTags };
