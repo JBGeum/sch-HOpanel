@@ -86,7 +86,7 @@ $r: $shp-radius;
     background: var(--shp-input-bg);
     border: 1px solid var(--shp-input-border);
     border-radius: map.get($r, input);
-    padding: 7px 10px;
+    padding: 0 7px;
     color: var(--shp-placeholder);
     font-size: 12px;
 

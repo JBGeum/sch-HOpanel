@@ -113,7 +113,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #query = "";
   #activeTag = "";
   #view: "list" | "group" = "list";
-  #searchFocused = false;
+  /** 검색으로 인한 재렌더 직후에만 input 포커스·캐럿을 복원한다(다른 액션 렌더는 제외). 일회성 플래그. */
+  #restoreSearch = false;
+  /** 재렌더 직전 캐럿 위치(input 재생성 후 같은 자리로 복원). */
+  #searchCaret: number | null = null;
   /** 검색 재렌더 디바운스 타이머. 매 키 입력마다 전체 재렌더하면 input 이 재생성돼 IME 조합·캐럿이 깨지므로, 타이핑이 멈춘 뒤에만 렌더한다. */
   #searchTimer: number | null = null;
   /** IME 조합 중 여부. 조합 중에는 재렌더하지 않는다(한글 자모 조합 보호). */
@@ -226,6 +229,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const search = this.element.querySelector<HTMLInputElement>('input[name="q"]');
     if (search) {
       // 타이핑이 멈춘 뒤에만 재렌더(디바운스). 조합 중이면 미뤘다 끝나고 렌더.
+      // 렌더 직전 캐럿 위치를 저장하고 일회성 복원 플래그를 세운다.
       const scheduleRender = (): void => {
         if (this.#searchTimer !== null) clearTimeout(this.#searchTimer);
         this.#searchTimer = window.setTimeout(() => {
@@ -234,6 +238,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             scheduleRender();
             return;
           }
+          this.#searchCaret = search.selectionStart;
+          this.#restoreSearch = true;
           void this.render();
         }, 200);
       };
@@ -243,24 +249,22 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       search.addEventListener("compositionend", () => {
         this.#composing = false;
         this.#query = search.value;
-        this.#searchFocused = true;
         scheduleRender();
       });
       search.addEventListener("input", () => {
         // IME 조합 중 input 은 무시(compositionend 에서 확정 반영) → 조합 깨짐 방지.
         if (this.#composing) return;
         this.#query = search.value;
-        this.#searchFocused = true;
         scheduleRender();
       });
-      search.addEventListener("blur", () => {
-        this.#searchFocused = false;
-      });
-      // 디바운스 재렌더가 input 을 재생성하므로, 검색 중이었으면 포커스·캐럿(끝) 복원.
-      if (this.#searchFocused) {
+      // 검색으로 인한 재렌더 직후에만 포커스·캐럿을 같은 자리로 복원(다른 액션 렌더는 제외).
+      // input 재생성 시 발생하는 blur 와 무관한 일회성 플래그라, 캐럿이 맨 앞으로 튀지 않는다.
+      if (this.#restoreSearch) {
+        this.#restoreSearch = false;
         search.focus();
-        const len = search.value.length;
-        search.setSelectionRange(len, len);
+        const pos = this.#searchCaret ?? search.value.length;
+        const clamped = Math.min(Math.max(pos, 0), search.value.length);
+        search.setSelectionRange(clamped, clamped);
       }
     }
   }
