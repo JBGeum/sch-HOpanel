@@ -494,13 +494,13 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const checks = pcs
       .map((a) => {
         const checked = current.includes(a.id ?? "") ? " checked" : "";
-        return `<label style="display:block"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${checked}> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
+        return `<label class="shp-check"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${checked}><span class="shp-check__box"></span> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
       })
       .join("");
 
-    const content = `<p>표면을 볼 대상을 선택하세요.</p>${checks}`;
+    const content = `<div class="shp-dialog-body"><p>표면을 볼 대상을 선택하세요.</p><div class="shp-checklist">${checks}</div></div>`;
 
-    const selected = await DialogV2.wait({
+    const selected = await DialogV2.wait(withDialogTheme({
       window: { title: "표면 가시성 — 일부" },
       content,
       rejectClose: false,
@@ -509,9 +509,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           action: "ok",
           label: "적용",
           icon: "fa-solid fa-check",
+          class: "shp-dbtn shp-dbtn--primary",
           default: true,
-          // Cast rationale: ButtonCallback receives (event, button, dialog: DialogV2.Any).
-          // dialog.element is HTMLElement on ApplicationV2 (좁히는 캐스트는 dialogEl 한 곳에 집중).
           callback: (
             _event: PointerEvent | SubmitEvent,
             _button: HTMLButtonElement,
@@ -523,9 +522,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             ).map((el) => el.value);
           },
         },
-        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark" },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark", class: "shp-dbtn" },
       ],
-    });
+    }));
 
     // selected: string[](ok, 빈 배열 가능) | "cancel"/"close"/null(dismiss)
     if (!Array.isArray(selected)) return null;
@@ -543,13 +542,13 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((a) => {
         const isAlready = alreadyRevealed.includes(a.id ?? "");
         const attrs = isAlready ? ' disabled checked' : '';
-        return `<label style="display:block"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${attrs}> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
+        return `<label class="shp-check"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${attrs}><span class="shp-check__box"></span> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
       })
       .join("");
 
-    const content = `<p>공개 대상을 선택하세요. <b>되돌릴 수 없습니다.</b></p>${checks}`;
+    const content = `<div class="shp-dialog-body"><p>공개 대상을 선택하세요. <b class="shp-warn">되돌릴 수 없습니다.</b></p><div class="shp-checklist">${checks}</div></div>`;
 
-    const selected = await DialogV2.wait({
+    const selected = await DialogV2.wait(withDialogTheme({
       window: { title: "비밀 공개" },
       content,
       rejectClose: false,
@@ -558,10 +557,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           action: "ok",
           label: "공개",
           icon: "fa-solid fa-check",
+          class: "shp-dbtn shp-dbtn--primary",
           default: true,
-          // Cast rationale: ButtonCallback receives (event, button, dialog: DialogV2.Any).
-          // We query dialog.element which is HTMLElement on ApplicationV2 — the cast from
-          // DialogV2.Any to the base class is safe; only HTMLElement querying is performed.
           callback: (
             _event: PointerEvent | SubmitEvent,
             _button: HTMLButtonElement,
@@ -573,13 +570,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             ).map((el) => el.value);
           },
         },
-        {
-          action: "cancel",
-          label: "취소",
-          icon: "fa-solid fa-xmark",
-        },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark", class: "shp-dbtn" },
       ],
-    });
+    }));
 
     // selected is string[] from ok callback, or "cancel"/"close"/null from dismiss
     if (!Array.isArray(selected) || selected.length === 0) return;
