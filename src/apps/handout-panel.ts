@@ -131,6 +131,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       delete: HandoutPanel._onDelete,
       "surface-vis": HandoutPanel._onSurfaceVis,
       retract: HandoutPanel._onRetract,
+      filter: HandoutPanel._onFilter,
+      "set-view": HandoutPanel._onSetView,
     },
   };
 
@@ -217,6 +219,23 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   ): Promise<void> {
     const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
     this.element.dataset.theme = theme;
+    const search = this.element.querySelector<HTMLInputElement>('input[name="q"]');
+    if (search) {
+      search.addEventListener("input", () => {
+        this.#query = search.value;
+        this.#searchFocused = true;
+        void this.render();
+      });
+      search.addEventListener("blur", () => {
+        this.#searchFocused = false;
+      });
+      // 라이브 검색 re-render 가 포커스를 잃으므로, 검색 중이었으면 복원(캐럿 끝).
+      if (this.#searchFocused) {
+        search.focus();
+        const len = search.value.length;
+        search.setSelectionRange(len, len);
+      }
+    }
   }
 
   /**
@@ -238,6 +257,20 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     await setSetting(SETTINGS.theme, next);
     // Re-render with controls:true so the header controls dropdown icon updates (sun↔moon).
     void this.render({ window: { controls: true } });
+  }
+
+  /** 카테고리 단일 필터 토글(전체 key=""). 같은 칩 재클릭은 해제. */
+  protected static _onFilter(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): void {
+    const tag = target.dataset.filter ?? "";
+    this.#activeTag = this.#activeTag === tag ? "" : tag;
+    void this.render();
+  }
+
+  /** 보기 토글(list/group). */
+  protected static _onSetView(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): void {
+    const v = target.dataset.viewSet;
+    if (v === "list" || v === "group") this.#view = v;
+    void this.render();
   }
 
   protected static _onToggleExpand(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): void {
