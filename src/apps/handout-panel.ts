@@ -3,7 +3,7 @@ import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
 import { parseTags, splitTagsForEdit } from "../handout/handout-create";
-import type { Owner } from "../handout/reveal-state";
+import type { Owner, SurfaceMode } from "../handout/reveal-state";
 import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
 import { log } from "../utils/logger";
 
@@ -91,6 +91,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       create: HandoutPanel._onCreate,
       edit: HandoutPanel._onEdit,
       delete: HandoutPanel._onDelete,
+      "surface-vis": HandoutPanel._onSurfaceVis,
     },
   };
 
@@ -353,6 +354,32 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
+   * 표면 가시성 세그먼트(GM 전용 액션). 현재 mode 재클릭은 no-op.
+   * all/hidden 은 즉시 적용(가역이라 확인 다이얼로그 없음, revealedTo 보존).
+   * limited 는 대상 액터 다이얼로그를 거쳐 선택 명단으로 교체(replace, 빈 선택도 유효).
+   */
+  protected static async _onSurfaceVis(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
+    const id = target.dataset.handoutId;
+    const mode = target.dataset.mode as SurfaceMode | undefined;
+    if (!id || !mode) return;
+    const doc = getHandoutDoc(id);
+    if (!doc) return;
+    const cur = doc.flags.revealState.surface;
+    if (mode === cur.mode) return; // 현재 상태 재클릭 → no-op
+    const api = game.modules.get(MODULE_ID)?.api;
+    if (mode === "limited") {
+      const selected = await HandoutPanel._openSurfaceLimitDialog(cur.revealedTo);
+      if (selected === null) return; // 취소/dismiss
+      await api?.setSurfaceVisibility(id, { mode: "limited", revealedTo: selected });
+    } else {
+      // all | hidden — 즉시, 확인 없음, 기존 revealedTo 보존
+      await api?.setSurfaceVisibility(id, { mode, revealedTo: cur.revealedTo });
+    }
+    log.info("setSurfaceVisibility requested", id, mode);
+    void this.render();
+  }
+
+  /**
    * 편집 폼 다이얼로그(DialogV2.wait). 생성 다이얼로그와 동일 구조이되 본문(표면/비밀) 없음 +
    * 현재값 prefill: kind 라디오 체크, actorId select 선택, 태그(dict)는 선택·커스텀 태그는 freeTags.
    * 0-액터 처리(pc 비활성·기본 떠도는)·동적 토글·escapeHtml 은 생성과 동일.
@@ -431,6 +458,54 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
     if (!result || typeof result === "string") return null;
     return result as EditFormResult;
+  }
+
+  /**
+   * 표면 limited 대상 선택 다이얼로그. _openRevealDialog 와 동형이되 교체(replace) 의미론:
+   * 현재 revealedTo 는 checked 로 prefill 하되 disabled 아님(해제 가능). 빈 선택도 유효(일부 0).
+   * 반환: 선택된 actorId[](교체 대상 전체, 빈 배열 포함) | null(취소/dismiss).
+   */
+  protected static async _openSurfaceLimitDialog(current: string[]): Promise<string[] | null> {
+    const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
+    const checks = pcs
+      .map((a) => {
+        const checked = current.includes(a.id ?? "") ? " checked" : "";
+        return `<label style="display:block"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"${checked}> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`;
+      })
+      .join("");
+
+    const content = `<p>표면을 볼 대상을 선택하세요.</p>${checks}`;
+
+    const selected = await DialogV2.wait({
+      window: { title: "표면 가시성 — 일부" },
+      content,
+      rejectClose: false,
+      buttons: [
+        {
+          action: "ok",
+          label: "적용",
+          icon: "fa-solid fa-check",
+          default: true,
+          // Cast rationale: ButtonCallback receives (event, button, dialog: DialogV2.Any).
+          // dialog.element is HTMLElement on ApplicationV2 (좁히는 캐스트는 dialogEl 한 곳에 집중).
+          callback: (
+            _event: PointerEvent | SubmitEvent,
+            _button: HTMLButtonElement,
+            dialog: foundry.applications.api.DialogV2.Any,
+          ) => {
+            const dlgEl = dialogEl(dialog);
+            return Array.from(
+              dlgEl.querySelectorAll<HTMLInputElement>('input[name="actor"]:checked'),
+            ).map((el) => el.value);
+          },
+        },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark" },
+      ],
+    });
+
+    // selected: string[](ok, 빈 배열 가능) | "cancel"/"close"/null(dismiss)
+    if (!Array.isArray(selected)) return null;
+    return selected;
   }
 
   /**
