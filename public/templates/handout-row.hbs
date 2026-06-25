@@ -2,7 +2,7 @@
   <div class="shp-row__head" data-action="toggle-expand">
     <div class="shp-row__owner">
       <span class="shp-type" data-type="{{kind}}">{{typeLabel}}</span>
-      <span class="shp-row__name">{{ownerName}}</span>
+      <span class="shp-row__name">{{name}}</span>
       {{#each tags}}<span class="shp-tag" data-cat="{{cat}}">{{label}}</span>{{/each}}
     </div>
     <span class="shp-chip" data-area="surface" data-state="{{surfaceChip.state}}">{{surfaceChip.label}}</span>
@@ -12,6 +12,11 @@
 
   {{#if expanded}}
   <div class="shp-detail">
+    <div class="shp-detail__head">
+      <span class="shp-detail__label">소유자</span>
+      <span class="shp-detail__spacer"></span>
+      <span class="shp-detail__value">{{ownerName}}</span>
+    </div>
     <div class="shp-detail__head">
       <span class="shp-detail__label">표면</span>
       {{#if @root.isGM}}
