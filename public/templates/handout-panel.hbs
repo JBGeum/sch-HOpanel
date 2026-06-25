@@ -29,5 +29,11 @@
         {{#each rows}}{{> handout-row this}}{{/each}}
       {{/if}}
     </div>
+
+    <footer class="shp-footer">
+      <span>총 {{footer.total}}개 · PC {{footer.pc}} · 공용 {{footer.floating}}</span>
+      <span class="shp-footer__spacer"></span>
+      <span>공개 대기 <b>{{footer.pending}}</b></span>
+    </footer>
   </div>
 </section>

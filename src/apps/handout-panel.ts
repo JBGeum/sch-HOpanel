@@ -2,7 +2,7 @@ import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
-import { filterViews, groupViewsByKind } from "../handout/handout-filter";
+import { filterViews, groupViewsByKind, aggregateFooter } from "../handout/handout-filter";
 import { parseTags, splitTagsForEdit } from "../handout/handout-create";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
 import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
@@ -84,6 +84,7 @@ interface PanelContext extends foundry.applications.api.ApplicationV2.RenderCont
   count: number;
   rows: PanelRow[];
   groups: { kind: HandoutKind; label: string; rows: PanelRow[] }[] | null;
+  footer: { total: number; pc: number; floating: number; pending: number };
 }
 
 /** 생성 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값. */
@@ -192,6 +193,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const filtered = filterViews(visible, { query: this.#query, tag: this.#activeTag });
     const rows: PanelRow[] = filtered.map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));
     const groups = this.#view === "group" ? groupViewsByKind(rows) : null;
+    const footer = aggregateFooter(rows);
     const categories = [
       { key: "", label: "전체" },
       ...Object.entries(dict).map(([key, def]) => ({ key, label: def.label })),
@@ -212,6 +214,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       count: rows.length,
       rows,
       groups,
+      footer,
     };
   }
 
