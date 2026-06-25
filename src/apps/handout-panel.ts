@@ -2,6 +2,7 @@ import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
+import { filterViews, groupViewsByKind } from "../handout/handout-filter";
 import { parseTags, splitTagsForEdit } from "../handout/handout-create";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
 import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
@@ -70,12 +71,19 @@ function buildTagChecks(dict: CategoryDict, selectedKeys: string[] = []): string
     .join("");
 }
 
+type PanelRow = HandoutView & { expanded: boolean };
+
 interface PanelContext extends foundry.applications.api.ApplicationV2.RenderContext {
   theme: string;
   isDark: boolean;
   isGM: boolean;
+  view: "list" | "group";
+  query: string;
+  activeTag: string;
+  categories: { key: string; label: string; active: boolean }[];
   count: number;
-  rows: (HandoutView & { expanded: boolean })[];
+  rows: PanelRow[];
+  groups: { kind: HandoutKind; label: string; rows: PanelRow[] }[] | null;
 }
 
 /** 생성 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값. */
@@ -102,6 +110,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #expanded = new Set<string>();
   /** Cached handout count from the last _prepareContext call; used by the title getter. */
   #lastCount = 0;
+  #query = "";
+  #activeTag = "";
+  #view: "list" | "group" = "list";
+  #searchFocused = false;
 
   static override DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2.DefaultOptions = {
     id: "sch-handout-panel",
@@ -162,17 +174,36 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       (getSetting(SETTINGS.categoryDict) as Record<string, { label: string; tone: string }>) ??
       DEFAULT_CATEGORY_DICT;
 
-    const rows = listHandoutDocs()
+    const visible = listHandoutDocs()
       .map((doc) => toHandoutView(doc, dict))
       .filter((v): v is HandoutView => v !== null)
       // 표면 hidden 이고 관리 불가면 카드 미표시(§6-5)
-      .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage))
-      .map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));
+      .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage));
+
+    const filtered = filterViews(visible, { query: this.#query, tag: this.#activeTag });
+    const rows: PanelRow[] = filtered.map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));
+    const groups = this.#view === "group" ? groupViewsByKind(rows) : null;
+    const categories = [
+      { key: "", label: "전체" },
+      ...Object.entries(dict).map(([key, def]) => ({ key, label: def.label })),
+    ].map((c) => ({ ...c, active: c.key === this.#activeTag }));
 
     // Cache count so the synchronous title getter can read it without re-querying.
     this.#lastCount = rows.length;
 
-    return { ...base, theme, isDark: theme === "dark", isGM: game.user?.isGM ?? false, count: rows.length, rows };
+    return {
+      ...base,
+      theme,
+      isDark: theme === "dark",
+      isGM: game.user?.isGM ?? false,
+      view: this.#view,
+      query: this.#query,
+      activeTag: this.#activeTag,
+      categories,
+      count: rows.length,
+      rows,
+      groups,
+    };
   }
 
   /**
