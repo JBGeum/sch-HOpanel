@@ -1,0 +1,132 @@
+// =============================================================
+//  _dialog.scss — DialogV2 모달 (생성·편집·공개·표면일부·삭제)
+//  네이티브 DialogV2 프레임 + 패널과 동일 토큰(var(--shp-*)).
+//  루트에 classes:["sch-handout-panel","shp-dialog"] + data-theme 가
+//  걸려 토큰이 해석된다(handout-panel.ts withDialogTheme).
+//  컴포넌트 규칙은 .application.shp-dialog 하위로 스코프해
+//  Foundry 코어의 input/select/textarea/button 스타일과 안 싸운다.
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+@use "mixins" as *;
+
+$r: $shp-radius;
+
+.application.shp-dialog {
+  // 네이티브 window-content 를 패널 톤으로. 헤더 테마는
+  // _panel.scss 의 .application.sch-handout-panel > .window-header 규칙을 공유.
+  .window-content {
+    background: var(--shp-panel);
+    color: var(--shp-text);
+    font-family: $shp-font;
+  }
+
+  // 본문 래퍼
+  .shp-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 14px 16px;
+
+    &--message {
+      display: block;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--shp-content-tx);
+    }
+  }
+
+  // 비가역 경고
+  .shp-warn { color: var(--shp-danger-tx); font-weight: 800; }
+
+  // 필드 라벨
+  .shp-field {
+    display: flex;
+    flex-direction: column;
+    &__label {
+      font-size: 11px; font-weight: 800; letter-spacing: .03em;
+      color: var(--shp-subtext);
+      margin-bottom: 6px;
+      em { font-style: normal; font-weight: 500; color: var(--shp-muted); }
+    }
+  }
+
+  // 종류 라디오 그룹
+  .shp-fieldset {
+    border: 1px solid var(--shp-input-border);
+    border-radius: map.get($r, card);
+    padding: 6px 14px 12px;
+    margin: 0;
+    legend {
+      font-size: 11px; font-weight: 800; letter-spacing: .04em;
+      color: var(--shp-subtext);
+      padding: 0 6px;
+    }
+    &__opts { display: flex; gap: 18px; padding: 4px 2px 2px; }
+  }
+
+  // 입력류 공통
+  %shp-dlg-input {
+    width: 100%;
+    background: var(--shp-input-bg);
+    border: 1px solid var(--shp-input-border);
+    border-radius: map.get($r, input);
+    font-size: 13px;
+    color: var(--shp-text);
+    font-family: $shp-font;
+    &::placeholder { color: var(--shp-placeholder); }
+    &:focus-visible { @include focus-ring; }
+  }
+  .shp-input    { @extend %shp-dlg-input; padding: 8px 11px; }
+  .shp-select   { @extend %shp-dlg-input; padding: 8px 11px; }
+  .shp-textarea { @extend %shp-dlg-input; min-height: 64px; padding: 9px 11px; line-height: 1.5; resize: vertical; }
+
+  // 라디오 / 체크 (네이티브 input + 형제 __box span)
+  .shp-radio, .shp-check {
+    display: inline-flex; align-items: center; gap: 9px;
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--shp-subtext);
+    input { position: absolute; opacity: 0; pointer-events: none; }
+  }
+  .shp-radio__box {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--shp-input-border);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none;
+  }
+  .shp-radio input:checked + .shp-radio__box { border-color: var(--shp-primary); }
+  .shp-radio input:checked + .shp-radio__box::after {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--shp-primary);
+  }
+  .shp-check__box {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--shp-input-border);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; color: transparent;
+    flex: none;
+  }
+  .shp-check input:checked + .shp-check__box {
+    background: var(--shp-primary); border-color: var(--shp-primary); color: #fff;
+  }
+  .shp-check input:checked + .shp-check__box::after { content: "✓"; }
+  .shp-check input:disabled + .shp-check__box { opacity: .55; }
+
+  // 체크 목록(공개/표면일부)
+  .shp-checklist { display: flex; flex-direction: column; gap: 8px; }
+
+  // 버튼 (DialogV2 Button.class 로 부여)
+  .shp-dbtn {
+    border-radius: map.get($r, input);
+    padding: 8px 16px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    font-family: $shp-font;
+    background: var(--shp-btn-bg);
+    color: var(--shp-btn-tx);
+    border: 1px solid var(--shp-btn-border);
+
+    &--primary { background: var(--shp-primary); color: #fff; border: 0; font-weight: 700; }
+    &--danger  { background: var(--shp-danger-tx); color: #fff; border: 0; font-weight: 700; }
+    &--danger-ghost { color: var(--shp-danger-tx); border-color: var(--shp-danger-border); }
+  }
+}
