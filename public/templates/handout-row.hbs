@@ -47,6 +47,8 @@
       <span class="shp-actions__spacer"></span>
       <button class="shp-btn" data-action="open-sheet" data-handout-id="{{id}}" type="button">시트 열기</button>
       {{#if @root.isGM}}
+      <button class="shp-btn" data-action="share" data-area="surface" data-handout-id="{{id}}" type="button">표면 게시</button>
+      <button class="shp-btn" data-action="share" data-area="secret" data-handout-id="{{id}}" type="button">비밀 게시</button>
       <button class="shp-btn" data-action="edit" data-handout-id="{{id}}" type="button">편집</button>
       <button class="shp-btn shp-btn--danger" data-action="delete" data-handout-id="{{id}}" type="button">삭제</button>
       {{/if}}
