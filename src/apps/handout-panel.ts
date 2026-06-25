@@ -86,6 +86,7 @@ interface CreateFormResult {
   secret: string;
   tags: string[];
   freeTags: string;
+  name: string;
 }
 
 /** 편집 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값(본문 없음). */
@@ -94,6 +95,7 @@ interface EditFormResult {
   actorId: string;
   tags: string[];
   freeTags: string;
+  name: string;
 }
 
 export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -269,6 +271,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       tags,
       surface: result.surface,
       secret: result.secret,
+      name: result.name,
     });
     log.info("createHandout requested", owner, tags);
     void this.render();
@@ -293,11 +296,12 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const content = `
       <div class="shp-dialog-body">
+        <div class="shp-field"><div class="shp-field__label">이름</div><input class="shp-input" type="text" name="title" placeholder="핸드아웃 이름"></div>
         <fieldset class="shp-fieldset">
           <legend>종류</legend>
           <div class="shp-fieldset__opts">
             <label class="shp-radio"><input type="radio" name="kind" value="pc" ${pcAttrs}><span class="shp-radio__box"></span> PC</label>
-            <label class="shp-radio"><input type="radio" name="kind" value="floating" ${floatingAttrs}><span class="shp-radio__box"></span> 떠도는</label>
+            <label class="shp-radio"><input type="radio" name="kind" value="floating" ${floatingAttrs}><span class="shp-radio__box"></span> 공용</label>
           </div>
         </fieldset>
         <div class="shp-field sch-create-actor" style="${actorRowStyle}">
@@ -347,7 +351,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
               el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
             ).map((o) => o.value);
             const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
-            const out: CreateFormResult = { kind, actorId, surface, secret, tags, freeTags };
+            const name = el.querySelector<HTMLInputElement>('input[name="title"]')?.value ?? "";
+            const out: CreateFormResult = { kind, actorId, surface, secret, tags, freeTags, name };
             return out;
           },
         },
@@ -376,7 +381,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const owner: Owner =
       result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
     const api = game.modules.get(MODULE_ID)?.api;
-    await api?.updateHandoutMeta(id, { owner, kind: result.kind, tags, name: doc.entry.name });
+    await api?.updateHandoutMeta(id, { owner, kind: result.kind, tags, name: result.name });
     log.info("updateHandoutMeta requested", id, owner, tags);
     void this.render();
   }
@@ -428,11 +433,12 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const content = `
       <div class="shp-dialog-body">
+        <div class="shp-field"><div class="shp-field__label">이름</div><input class="shp-input" type="text" name="title" value="${escapeHtml(doc.entry.name ?? "")}"></div>
         <fieldset class="shp-fieldset">
           <legend>종류</legend>
           <div class="shp-fieldset__opts">
             <label class="shp-radio"><input type="radio" name="kind" value="pc"${pcChecked}${pcDisabled}><span class="shp-radio__box"></span> PC</label>
-            <label class="shp-radio"><input type="radio" name="kind" value="floating"${floatingChecked}><span class="shp-radio__box"></span> 떠도는</label>
+            <label class="shp-radio"><input type="radio" name="kind" value="floating"${floatingChecked}><span class="shp-radio__box"></span> 공용</label>
           </div>
         </fieldset>
         <div class="shp-field sch-edit-actor" style="${actorRowStyle}">
@@ -478,7 +484,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
               el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
             ).map((o) => o.value);
             const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
-            const out: EditFormResult = { kind, actorId, tags, freeTags };
+            const name = el.querySelector<HTMLInputElement>('input[name="title"]')?.value ?? "";
+            const out: EditFormResult = { kind, actorId, tags, freeTags, name };
             return out;
           },
         },
