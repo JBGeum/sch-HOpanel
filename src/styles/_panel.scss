@@ -176,6 +176,20 @@ $r: $shp-radius;
   &__count { font-size: 10px; font-weight: 700; color: var(--shp-muted); }
 }
 
+// 보기 토글 세그(.shp-vis 재사용) — 활성은 패널 data-view 기준(기존 seg-on 토큰 재사용).
+.sch-handout-panel[data-view="list"]  .shp-vis--view .shp-vis__opt[data-view-set="list"],
+.sch-handout-panel[data-view="group"] .shp-vis--view .shp-vis__opt[data-view-set="group"] {
+  font-weight: 700;
+  background: var(--shp-seg-on-bg);
+  color: var(--shp-seg-on-tx);
+}
+
+// 그룹 헤더 점 색(타입 토큰 재사용).
+.shp-group__dot {
+  &[data-type="pc"]       { background: var(--shp-type-pc-fg); }
+  &[data-type="floating"] { background: var(--shp-type-floating-fg); }
+}
+
 // 푸터 --------------------------------------------------------
 .shp-footer {
   display: flex;
