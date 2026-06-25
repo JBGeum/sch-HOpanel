@@ -14,6 +14,7 @@ import { toHandoutView, type HandoutView } from "../handout/handout-view";
 import { getSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { SETTINGS } from "../constants";
 import { log } from "../utils/logger";
+import { buildChatCard } from "../handout/handout-chat";
 
 export interface HandoutApi {
   getHandout(id: string): HandoutView | null;
@@ -38,6 +39,7 @@ export interface HandoutApi {
     id: string,
     surface: { mode: SurfaceMode; revealedTo: string[] },
   ): Promise<void>;
+  shareToChat(id: string, area: "surface" | "secret"): Promise<void>;
 }
 
 export function buildApi(): HandoutApi {
@@ -135,6 +137,26 @@ export function buildApi(): HandoutApi {
       await applyFlagsUpdate(doc, {
         revealState: { ...doc.flags.revealState, surface },
       });
+    },
+
+    async shareToChat(id, area) {
+      if (!game.user?.isGM) throw new Error("shareToChat: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`shareToChat: handout not found: ${id}`);
+      const page = area === "surface" ? doc.surfacePage : doc.secretPage;
+      const o = doc.flags.owner;
+      const ownerName =
+        o.kind === "actor" && o.actorId ? game.actors?.get(o.actorId)?.name ?? "(알 수 없음)" : "공용";
+      const content = buildChatCard({
+        name: doc.entry.name ?? "",
+        typeLabel: doc.flags.kind === "pc" ? "PC" : "공용",
+        kind: doc.flags.kind,
+        ownerName,
+        area,
+        body: page?.text?.content ?? "",
+        theme: (getSetting(SETTINGS.theme) as string) ?? "light",
+      });
+      await ChatMessage.create({ content, speaker: ChatMessage.getSpeaker() });
     },
   };
 }
