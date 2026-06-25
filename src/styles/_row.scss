@@ -8,6 +8,12 @@
 
 $r: $shp-radius;
 
+// 공개 포커스 강조 펄스(1.5s, 1회). 테마 accent 를 옅게 → 투명으로.
+@keyframes shp-row-flash {
+  0%   { background: color-mix(in srgb, var(--shp-primary) 24%, transparent); }
+  100% { background: transparent; }
+}
+
 // 행 래퍼 -----------------------------------------------------
 .shp-row {
   border-bottom: 1px solid var(--shp-row-border);
@@ -17,6 +23,8 @@ $r: $shp-radius;
     border-top: 1px solid var(--shp-expand-border);
     border-bottom: 1px solid var(--shp-expand-border);
   }
+
+  &--flash { animation: shp-row-flash 1.5s ease-out; }
 
   // 행 머리(클릭 영역) — 소유자 | 표면 | 비밀 | caret
   &__head {

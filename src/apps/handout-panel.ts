@@ -122,6 +122,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #searchTimer: number | null = null;
   /** IME 조합 중 여부. 조합 중에는 재렌더하지 않는다(한글 자모 조합 보호). */
   #composing = false;
+  /** 다음 렌더에서 스크롤·강조할 핸드아웃 id(일회성). null 이면 포커스 동작 없음. */
+  #focusScrollId: string | null = null;
+  /** 다음 렌더에서 .shp-row--flash 를 줄 핸드아웃 id 집합(일회성). */
+  #focusFlash = new Set<string>();
 
   static override DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2.DefaultOptions = {
     id: "sch-handout-panel",
@@ -268,6 +272,45 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         search.setSelectionRange(clamped, clamped);
       }
     }
+
+    // 공개 포커스(일회성): 예약된 핸드아웃으로 스크롤 + 강조 펄스.
+    // 검색/액션 렌더에는 #focusScrollId 가 null 이라 미발동.
+    if (this.#focusScrollId !== null) {
+      const targetId = this.#focusScrollId;
+      const flashIds = this.#focusFlash;
+      this.#focusScrollId = null;
+      this.#focusFlash = new Set();
+
+      const row = this.element.querySelector<HTMLElement>(`[data-handout-id="${targetId}"]`);
+      // 필터/검색으로 가려져 DOM 에 없으면 포커스 생략.
+      if (row) {
+        row.scrollIntoView({ block: "nearest" });
+        for (const id of flashIds) {
+          const el = this.element.querySelector<HTMLElement>(`[data-handout-id="${id}"]`);
+          if (!el) continue;
+          el.classList.add("shp-row--flash");
+          window.setTimeout(() => el.classList.remove("shp-row--flash"), 1500);
+        }
+      }
+    }
+  }
+
+  /**
+   * 다음 렌더에서 포커스할 핸드아웃을 예약한다(렌더는 하지 않음).
+   * 전부 펼치고(#expanded), 첫 id 를 스크롤 기준으로, 전부를 강조 대상으로 잡는다.
+   * 열린 패널(focusReveals)과 닫힘→열기(module.openWithFocus)가 공유한다.
+   */
+  setPendingFocus(ids: string[]): void {
+    if (ids.length === 0) return;
+    for (const id of ids) this.#expanded.add(id);
+    this.#focusScrollId = ids[0];
+    this.#focusFlash = new Set(ids);
+  }
+
+  /** 열린 패널용: 포커스 예약 후 즉시 재렌더. */
+  focusReveals(ids: string[]): void {
+    this.setPendingFocus(ids);
+    void this.render();
   }
 
   /**
