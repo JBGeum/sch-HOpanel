@@ -8,7 +8,7 @@ import {
   listHandoutDocs,
   type HandoutDoc,
 } from "../handout/handout-repo";
-import type { Owner, RevealState, SecretMode } from "../handout/reveal-state";
+import type { Owner, RevealState, SecretMode, SurfaceMode } from "../handout/reveal-state";
 import type { HandoutKind, CategoryDict } from "../handout/handout-flags";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
 import { getSetting, DEFAULT_CATEGORY_DICT } from "../settings";
@@ -31,6 +31,10 @@ export interface HandoutApi {
   updateHandoutMeta(
     id: string,
     meta: { owner: Owner; kind: HandoutKind; tags: string[] },
+  ): Promise<void>;
+  setSurfaceVisibility(
+    id: string,
+    surface: { mode: SurfaceMode; revealedTo: string[] },
   ): Promise<void>;
 }
 
@@ -96,6 +100,15 @@ export function buildApi(): HandoutApi {
       const doc = getHandoutDoc(id);
       if (!doc) throw new Error(`updateHandoutMeta: handout not found: ${id}`);
       await applyFlagsUpdate(doc, meta);
+    },
+
+    async setSurfaceVisibility(id, surface) {
+      if (!game.user?.isGM) throw new Error("setSurfaceVisibility: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`setSurfaceVisibility: handout not found: ${id}`);
+      await applyFlagsUpdate(doc, {
+        revealState: { ...doc.flags.revealState, surface },
+      });
     },
   };
 }
