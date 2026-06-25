@@ -28,6 +28,7 @@ export interface HandoutApi {
     name?: string;
   }): Promise<HandoutView>;
   revealSecret(id: string, targetActorIds: string[]): Promise<void>;
+  retractSecret(id: string, targetActorIds: string[]): Promise<void>;
   deleteHandout(id: string): Promise<void>;
   updateHandoutMeta(
     id: string,
@@ -84,6 +85,26 @@ export function buildApi(): HandoutApi {
         secret: { mode: nextMode, revealedTo: merged },
       };
       await applyRevealState(doc, next);
+    },
+
+    async retractSecret(id, targetActorIds) {
+      if (!game.user?.isGM) throw new Error("retractSecret: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`retractSecret: handout not found: ${id}`);
+
+      const prev = doc.flags.revealState.secret;
+      let next: RevealState["secret"];
+      if (prev.mode === "all") {
+        next = { mode: "owner", revealedTo: [] }; // 전체 회수
+      } else if (prev.mode === "limited") {
+        const remaining = prev.revealedTo.filter((a) => !targetActorIds.includes(a));
+        next = remaining.length
+          ? { mode: "limited", revealedTo: remaining }
+          : { mode: "owner", revealedTo: [] }; // 다 빠지면 비공개
+      } else {
+        return; // owner — 회수 대상 없음(no-op)
+      }
+      await applyRevealState(doc, { surface: doc.flags.revealState.surface, secret: next });
     },
 
     async deleteHandout(id) {
