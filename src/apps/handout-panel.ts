@@ -25,6 +25,28 @@ function dialogEl(dialog: unknown): HTMLElement {
   return (dialog as { element: HTMLElement }).element;
 }
 
+type DialogRender = foundry.applications.api.DialogV2.RenderCallback;
+
+/**
+ * DialogV2 config 에 네임스페이스 클래스(.sch-handout-panel/.shp-dialog)와
+ * 현재 테마(data-theme)를 주입한다. 기존 render 가 있으면 먼저 실행한 뒤 data-theme 를 설정.
+ * wait/confirm 양쪽에서 재사용(5개 다이얼로그 공통 테마 배선).
+ * 반환 캐스트(as C): 스프레드+오버라이드 결과를 제네릭 C 로 좁히기 위함(필드는 모두 C 의 제약 내).
+ */
+function withDialogTheme<C extends { classes?: string[]; render?: DialogRender | null } & Record<string, unknown>>(config: C): C {
+  const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
+  const prev = config.render ?? undefined;
+  const render: DialogRender = (event, dialog) => {
+    prev?.(event, dialog);
+    dialogEl(dialog).dataset.theme = theme;
+  };
+  return {
+    ...config,
+    classes: [...(config.classes ?? []), "sch-handout-panel", "shp-dialog"],
+    render,
+  } as C;
+}
+
 /** 플레이어 소유 액터 목록 → <option> 문자열. selectedId 와 일치하는 option 에 selected. */
 function buildActorOptions(pcs: Actor[], selectedId?: string): string {
   return pcs
@@ -214,11 +236,13 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   protected static async _onDelete(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
     const id = target.dataset.handoutId;
     if (!id) return;
-    const confirmed = await DialogV2.confirm({
+    const confirmed = await DialogV2.confirm(withDialogTheme({
       window: { title: "핸드아웃 삭제" },
-      content: "<p>이 핸드아웃을 삭제합니다. <b>되돌릴 수 없습니다.</b></p>",
+      content: `<div class="shp-dialog-body shp-dialog-body--message">이 핸드아웃을 삭제합니다. <b class="shp-warn">되돌릴 수 없습니다.</b></div>`,
+      yes: { label: "예", class: "shp-dbtn shp-dbtn--danger" },
+      no: { label: "아니오", class: "shp-dbtn shp-dbtn--danger-ghost" },
       rejectClose: false,
-    });
+    }));
     if (!confirmed) return;
     const api = game.modules.get(MODULE_ID)?.api;
     await api?.deleteHandout(id);
