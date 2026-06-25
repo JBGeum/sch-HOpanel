@@ -118,6 +118,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       edit: HandoutPanel._onEdit,
       delete: HandoutPanel._onDelete,
       "surface-vis": HandoutPanel._onSurfaceVis,
+      retract: HandoutPanel._onRetract,
     },
   };
 
@@ -230,6 +231,39 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const doc = id ? getHandoutDoc(id) : null;
     if (!doc) return;
     await HandoutPanel._openRevealDialog(doc.entry.id ?? "", doc.flags.revealState.secret.revealedTo);
+    void this.render();
+  }
+
+  /**
+   * 비밀 회수(GM 전용 액션). 공개의 역방향.
+   * all(전원공개) → 확인 후 전체 회수(→비공개). limited → 대상 선택 다이얼로그(체크=회수).
+   * owner → 회수 대상 없음(no-op 안전망; 버튼이 안 떠야 정상).
+   */
+  protected static async _onRetract(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
+    const id = target.dataset.handoutId;
+    if (!id) return;
+    const doc = getHandoutDoc(id);
+    if (!doc) return;
+    const secret = doc.flags.revealState.secret;
+    const api = game.modules.get(MODULE_ID)?.api;
+    if (secret.mode === "all") {
+      const confirmed = await DialogV2.confirm(withDialogTheme({
+        window: { title: "비밀 회수" },
+        content: `<div class="shp-dialog-body shp-dialog-body--message">전원공개를 회수하여 비공개로 전환합니다. <span class="shp-detail__hint">이미 본 내용은 되돌릴 수 없습니다.</span></div>`,
+        yes: { label: "회수", class: "shp-dbtn shp-dbtn--danger" },
+        no: { label: "취소", class: "shp-dbtn" },
+        rejectClose: false,
+      }));
+      if (!confirmed) return;
+      await api?.retractSecret(id, []);
+    } else if (secret.mode === "limited") {
+      const selected = await HandoutPanel._openRetractDialog(secret.revealedTo);
+      if (selected === null || selected.length === 0) return; // 취소/빈 선택
+      await api?.retractSecret(id, selected);
+    } else {
+      return; // owner — no-op
+    }
+    log.info("retractSecret requested", id);
     void this.render();
   }
 
@@ -540,6 +574,52 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     }));
 
     // selected: string[](ok, 빈 배열 가능) | "cancel"/"close"/null(dismiss)
+    if (!Array.isArray(selected)) return null;
+    return selected;
+  }
+
+  /**
+   * 비밀 회수 대상 선택 다이얼로그(limited 모드). 후보 = 현재 공개 대상 액터(revealedTo).
+   * 기본 미체크 — 체크한 것이 회수 대상. 반환: 회수할 actorId[](빈 배열 가능) | null(취소/dismiss).
+   */
+  protected static async _openRetractDialog(revealedActorIds: string[]): Promise<string[] | null> {
+    const actors = Array.from((game.actors ?? []) as Iterable<Actor>).filter(
+      (a) => revealedActorIds.includes(a.id ?? ""),
+    );
+    const checks = actors
+      .map((a) =>
+        `<label class="shp-check"><input type="checkbox" name="actor" value="${escapeHtml(a.id ?? "")}"><span class="shp-check__box"></span> ${escapeHtml(a.name ?? "(알 수 없음)")}</label>`,
+      )
+      .join("");
+
+    const content = `<div class="shp-dialog-body"><p>회수할 대상을 선택하세요. <span class="shp-detail__hint">이미 본 내용은 되돌릴 수 없습니다.</span></p><div class="shp-checklist">${checks}</div></div>`;
+
+    const selected = await DialogV2.wait(withDialogTheme({
+      window: { title: "비밀 회수" },
+      content,
+      rejectClose: false,
+      buttons: [
+        {
+          action: "ok",
+          label: "회수",
+          icon: "fa-solid fa-rotate-left",
+          class: "shp-dbtn shp-dbtn--danger",
+          default: true,
+          callback: (
+            _event: PointerEvent | SubmitEvent,
+            _button: HTMLButtonElement,
+            dialog: foundry.applications.api.DialogV2.Any,
+          ) => {
+            const dlgEl = dialogEl(dialog);
+            return Array.from(
+              dlgEl.querySelectorAll<HTMLInputElement>('input[name="actor"]:checked'),
+            ).map((el) => el.value);
+          },
+        },
+        { action: "cancel", label: "취소", icon: "fa-solid fa-xmark", class: "shp-dbtn" },
+      ],
+    }));
+
     if (!Array.isArray(selected)) return null;
     return selected;
   }
