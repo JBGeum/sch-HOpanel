@@ -90,22 +90,8 @@ $r: $shp-radius;
 //  새 카테고리는 _tokens.scss 의 $shp-category-tone 에 추가 후 아래 루프가 자동 생성.
 .shp-tag {
   @include tag(slate);
-  @each $cat, $tone in $shp-category-tone {
-    &[data-cat="#{$cat}"] { @include tag($tone); }
-  }
 }
 
-// 필터 칩의 카테고리 활성색도 같은 매핑 재사용
-.shp-fchip {
-  @each $cat, $tone in $shp-category-tone {
-    &[data-cat="#{$cat}"].is-active {
-      background: var(--shp-tone-#{$tone}-bg);
-      color: var(--shp-tone-#{$tone}-fg);
-      border-color: var(--shp-tone-#{$tone}-dot);
-    }
-    &[data-cat="#{$cat}"] .shp-fchip__dot { background: var(--shp-tone-#{$tone}-dot); }
-  }
-}
 
 // 펼침 상세 ---------------------------------------------------
 .shp-detail {

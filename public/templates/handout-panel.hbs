@@ -11,13 +11,13 @@
     </div>
 
     <div class="shp-filters">
-      <span class="shp-filters__label">카테고리</span>
+      <span class="shp-filters__label">태그</span>
       {{#each categories}}
       <button class="shp-fchip{{#unless key}} shp-fchip--all{{/unless}}{{#if active}} is-active{{/if}}" data-cat="{{key}}" data-action="filter" data-filter="{{key}}" type="button">{{label}}</button>
       {{/each}}
     </div>
 
-    <div class="shp-colhead"><span>소유자 · 카테고리</span><span>표면</span><span>비밀</span><span></span></div>
+    <div class="shp-colhead"><span>소유자 · 태그</span><span>표면</span><span>비밀</span><span></span></div>
 
     <div class="shp-body">
       {{#if groups}}
