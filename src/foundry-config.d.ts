@@ -35,7 +35,6 @@ declare module "fvtt-types/configuration" {
   /** game.settings.register/get/set 에서 사용할 설정 키와 값 타입. */
   interface SettingConfig {
     "sch-handout-panel.theme": string;
-    "sch-handout-panel.categoryDict": Record<string, { label: string; tone: string }>;
     "sch-handout-panel.debugMode": boolean;
   }
 

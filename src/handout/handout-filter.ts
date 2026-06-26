@@ -72,3 +72,10 @@ export function aggregateFooter(views: HandoutView[]): {
     pending: views.filter((v) => !v.secretRevealed).length,
   };
 }
+
+/** 보이는 view 들에 실제 쓰인 태그의 합집합(중복 제거 + localeCompare 정렬). 동적 필터 칩 소스. */
+export function collectTags(views: HandoutView[]): string[] {
+  const set = new Set<string>();
+  for (const v of views) for (const t of v.tags) set.add(t.cat);
+  return [...set].sort((a, b) => a.localeCompare(b));
+}

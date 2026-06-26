@@ -1,5 +1,4 @@
 import type { SecretMode, SurfaceMode } from "./reveal-state";
-import type { CategoryDict } from "./handout-flags";
 import { canManage, listHandoutDocs, type HandoutDoc } from "./handout-repo";
 
 export interface Chip {
@@ -62,12 +61,12 @@ export function secretChip(mode: SecretMode, revealedCount: number): Chip {
   return { area: "secret", state: mode, label, tone: SECRET_TONE[mode] };
 }
 
-export function resolveTags(tags: string[], dict: CategoryDict): TagView[] {
-  return tags.map((cat) => ({ cat, label: dict[cat]?.label ?? cat }));
+export function resolveTags(tags: string[]): TagView[] {
+  return tags.map((cat) => ({ cat, label: cat }));
 }
 
-/** Foundry 상태 의존: page 내용/소유자 이름. 호출자(api)가 dict 를 settings 에서 주입한다. */
-export function toHandoutView(doc: HandoutDoc, dict: CategoryDict = {}): HandoutView | null {
+/** Foundry 상태 의존: page 내용/소유자 이름. */
+export function toHandoutView(doc: HandoutDoc): HandoutView | null {
   const { entry, flags, surfacePage, secretPage } = doc;
   const rs = flags.revealState;
 
@@ -85,7 +84,7 @@ export function toHandoutView(doc: HandoutDoc, dict: CategoryDict = {}): Handout
     kind: flags.kind,
     typeLabel: flags.kind === "pc" ? "PC" : "공용",
     ownerName,
-    tags: resolveTags(flags.tags, dict),
+    tags: resolveTags(flags.tags),
     surfaceChip: surfaceChip(rs.surface.mode, rs.surface.revealedTo.length),
     secretChip: secretChip(rs.secret.mode, rs.secret.revealedTo.length),
     surfaceContent: surfacePage?.text?.content ?? "",
@@ -109,9 +108,9 @@ function secretCanObserve(doc: HandoutDoc): boolean {
  * 패널 _prepareContext 와 반응성 핸들러가 공유하는 단일 가시성 출처.
  * 표면 hidden 이고 관리 불가면 카드 자체를 제외한다(비권한자 미표시).
  */
-export function listVisibleViews(dict: CategoryDict = {}): HandoutView[] {
+export function listVisibleViews(): HandoutView[] {
   return listHandoutDocs()
-    .map((doc) => toHandoutView(doc, dict))
+    .map((doc) => toHandoutView(doc))
     .filter((v): v is HandoutView => v !== null)
     .filter((v) => !(v.surfaceChip.state === "hidden" && !v.canManage));
 }

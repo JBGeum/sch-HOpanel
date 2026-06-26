@@ -6,12 +6,13 @@ import {
   deleteHandoutDoc,
   getHandoutDoc,
   listHandoutDocs,
+  updateHandoutBodyDoc,
   type HandoutDoc,
 } from "../handout/handout-repo";
 import type { Owner, RevealState, SecretMode, SurfaceMode } from "../handout/reveal-state";
-import type { HandoutKind, CategoryDict } from "../handout/handout-flags";
+import type { HandoutKind } from "../handout/handout-flags";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
-import { getSetting, DEFAULT_CATEGORY_DICT } from "../settings";
+import { getSetting } from "../settings";
 import { SETTINGS } from "../constants";
 import { log } from "../utils/logger";
 import { buildChatCard } from "../handout/handout-chat";
@@ -35,6 +36,7 @@ export interface HandoutApi {
     id: string,
     meta: { owner: Owner; kind: HandoutKind; tags: string[]; name: string },
   ): Promise<void>;
+  updateHandoutBody(id: string, body: { surface?: string; secret?: string }): Promise<void>;
   setSurfaceVisibility(
     id: string,
     surface: { mode: SurfaceMode; revealedTo: string[] },
@@ -43,13 +45,10 @@ export interface HandoutApi {
 }
 
 export function buildApi(): HandoutApi {
-  const dict = (): CategoryDict =>
-    (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
-
   return {
     getHandout(id) {
       const doc = getHandoutDoc(id);
-      return doc ? toHandoutView(doc, dict()) : null;
+      return doc ? toHandoutView(doc) : null;
     },
 
     listHandouts(filter) {
@@ -59,7 +58,7 @@ export function buildApi(): HandoutApi {
       if (filter?.owner)
         // TODO(Task 8): gm-kind owners have undefined actorId on both sides; refine owner filtering.
         docs = docs.filter((d) => d.flags.owner.actorId === filter.owner!.actorId);
-      return docs.map((d) => toHandoutView(d, dict())).filter((v): v is HandoutView => v !== null);
+      return docs.map((d) => toHandoutView(d)).filter((v): v is HandoutView => v !== null);
     },
 
     getRevealState(id) {
@@ -70,7 +69,7 @@ export function buildApi(): HandoutApi {
     async createHandout(args) {
       if (!game.user?.isGM) throw new Error("createHandout: GM only");
       const doc = await createHandoutDoc(args);
-      return toHandoutView(doc, dict())!;
+      return toHandoutView(doc)!;
     },
 
     async revealSecret(id, targetActorIds) {
@@ -128,6 +127,13 @@ export function buildApi(): HandoutApi {
       await applyFlagsUpdate(doc, flags);
       const nextName = name.trim() || (meta.kind === "pc" ? "PC 핸드아웃" : "공용 핸드아웃");
       if (nextName !== doc.entry.name) await doc.entry.update({ name: nextName });
+    },
+
+    async updateHandoutBody(id, body) {
+      if (!game.user?.isGM) throw new Error("updateHandoutBody: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`updateHandoutBody: handout not found: ${id}`);
+      await updateHandoutBodyDoc(doc, body);
     },
 
     async setSurfaceVisibility(id, surface) {

@@ -48,11 +48,13 @@ describe("secretChip", () => {
 });
 
 describe("resolveTags", () => {
-  const dict = { main: { label: "메인", tone: "rose" } };
-  it("known key → dict label", () => {
-    expect(resolveTags(["main"], dict)).toEqual([{ cat: "main", label: "메인" }]);
+  it("태그 문자열을 cat=label 로 매핑", () => {
+    expect(resolveTags(["main", "장소"])).toEqual([
+      { cat: "main", label: "main" },
+      { cat: "장소", label: "장소" },
+    ]);
   });
-  it("unknown key → key as label, slate tone default handled by SCSS", () => {
-    expect(resolveTags(["zzz"], dict)).toEqual([{ cat: "zzz", label: "zzz" }]);
+  it("빈 배열 → 빈 배열", () => {
+    expect(resolveTags([])).toEqual([]);
   });
 });

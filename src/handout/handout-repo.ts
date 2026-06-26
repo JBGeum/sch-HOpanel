@@ -222,3 +222,17 @@ export async function deleteHandoutDoc(id: string): Promise<void> {
   if (!doc) return;
   await doc.entry.delete();
 }
+
+/**
+ * 본문(page text.content)만 갱신한다. 제공된 키만 해당 page 를 update.
+ * ownership/flags 는 건드리지 않는다(이 경로는 page 본문 전용). undefined 키는 건너뜀.
+ */
+export async function updateHandoutBodyDoc(
+  doc: HandoutDoc,
+  body: { surface?: string; secret?: string },
+): Promise<void> {
+  if (body.surface !== undefined && doc.surfacePage)
+    await doc.surfacePage.update({ text: { content: body.surface } });
+  if (body.secret !== undefined && doc.secretPage)
+    await doc.secretPage.update({ text: { content: body.secret } });
+}

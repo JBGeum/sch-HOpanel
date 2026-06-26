@@ -1,11 +1,11 @@
-import { MODULE_ID, SETTINGS } from "./constants";
-import { registerSettings, getSetting, DEFAULT_CATEGORY_DICT } from "./settings";
+import { MODULE_ID } from "./constants";
+import { registerSettings } from "./settings";
 import { log } from "./utils/logger";
 import { buildApi } from "./api/index";
 import { HandoutPanel } from "./apps/handout-panel";
 import { listVisibleViews, type HandoutView } from "./handout/handout-view";
 import { buildFingerprint, diffReveals } from "./handout/reveal-detect";
-import { isHandout, type CategoryDict } from "./handout/handout-flags";
+import { isHandout } from "./handout/handout-flags";
 import "./styles/main.scss";
 
 // 공개 API 타입은 src/foundry-config.d.ts 의 ModuleConfig 에 선언한다.
@@ -27,7 +27,7 @@ Hooks.once("ready", () => {
   if (mod) mod.api = buildApi();
 
   // 패널 반응성 초기화: 기준 지문을 먼저 잡고(패널 열림과 무관) 문서 변경 훅을 구독한다.
-  lastFingerprint = buildFingerprint(listVisibleViews(currentDict()));
+  lastFingerprint = buildFingerprint(listVisibleViews());
   Hooks.on("updateJournalEntry", onJournalMaybeHandout);
   Hooks.on("createJournalEntry", onJournalMaybeHandout);
   Hooks.on("deleteJournalEntry", onJournalMaybeHandout);
@@ -78,9 +78,6 @@ const onChange = (...a: unknown[]) => {
 let lastFingerprint = new Map<string, boolean>();
 let reactTimer: number | null = null;
 
-const currentDict = (): CategoryDict =>
-  (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
-
 // 새 공개 토스트. 1건이면 이름 포함, N건이면 개수. 토스트 클릭 시 패널 열기(best-effort).
 function notifyReveal(revealedIds: string[], views: HandoutView[]): void {
   const message =
@@ -99,7 +96,7 @@ function reactToHandoutChange(): void {
   if (reactTimer !== null) clearTimeout(reactTimer);
   reactTimer = window.setTimeout(() => {
     reactTimer = null;
-    const views = listVisibleViews(currentDict());
+    const views = listVisibleViews();
     const next = buildFingerprint(views);
     const { revealedIds } = diffReveals(lastFingerprint, next);
     // ① 열린 패널: 새 공개가 있으면 포커스(스크롤+펼침+펄스), 없으면 단순 새로고침.

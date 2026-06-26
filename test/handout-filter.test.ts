@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripHtml, searchTier, filterViews, groupViewsByKind, aggregateFooter } from "../src/handout/handout-filter";
+import { stripHtml, searchTier, filterViews, groupViewsByKind, aggregateFooter, collectTags } from "../src/handout/handout-filter";
 import type { HandoutView } from "../src/handout/handout-view";
 
 function mk(over: Partial<HandoutView>): HandoutView {
@@ -114,5 +114,23 @@ describe("aggregateFooter", () => {
   });
   it("empty array → all zero", () => {
     expect(aggregateFooter([])).toEqual({ total: 0, pc: 0, floating: 0, pending: 0 });
+  });
+});
+
+describe("collectTags", () => {
+  it("여러 view 의 태그 합집합 + 중복 제거", () => {
+    const a = mk({ tags: [{ cat: "메인", label: "메인" }, { cat: "장소", label: "장소" }] });
+    const b = mk({ tags: [{ cat: "장소", label: "장소" }, { cat: "단서", label: "단서" }] });
+    expect(collectTags([a, b])).toEqual(["단서", "메인", "장소"]);
+  });
+  it("localeCompare 정렬", () => {
+    const a = mk({ tags: [{ cat: "b", label: "b" }, { cat: "a", label: "a" }, { cat: "c", label: "c" }] });
+    expect(collectTags([a])).toEqual(["a", "b", "c"]);
+  });
+  it("빈 입력 → 빈 배열", () => {
+    expect(collectTags([])).toEqual([]);
+  });
+  it("태그 없는 view → 빈 배열", () => {
+    expect(collectTags([mk({ tags: [] })])).toEqual([]);
   });
 });

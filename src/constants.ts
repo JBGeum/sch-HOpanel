@@ -17,8 +17,6 @@ export const HANDOUT_FOLDER_NAME = "Handouts";
 export const SETTINGS = {
   /** client: 패널 테마("light"|"dark") */
   theme: "theme",
-  /** world: 카테고리 사전 (key → {label, tone}) */
-  categoryDict: "categoryDict",
   /** client: 개발용 디버그 로그 토글 */
   debugMode: "debugMode",
 } as const;
