@@ -33,9 +33,13 @@ describe("htmlToBody", () => {
 
 describe("round-trip", () => {
   it("htmlToBody(bodyToHtml(x)) === x (비-공백 입력)", () => {
-    for (const x of ["a\nb", 'a<b & "c"\nd', "여러\n\n줄\n끝", "x"]) {
+    for (const x of ["a\nb", 'a<b & "c"\nd', "여러\n\n줄\n끝", "x", "it's a <tag> & \"q\" > 0"]) {
       expect(htmlToBody(bodyToHtml(x))).toBe(x);
     }
+  });
+  it("저장 경로 합성: bodyToHtml(htmlToBody(stored)) 무손실(정규 인라인 본문)", () => {
+    const stored = "a&lt;b<br>c";
+    expect(bodyToHtml(htmlToBody(stored))).toBe(stored);
   });
 });
 
