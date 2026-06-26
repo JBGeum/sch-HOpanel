@@ -2,11 +2,11 @@ import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
 import { getHandoutDoc, type HandoutDoc } from "../handout/handout-repo";
 import { listVisibleViews, type HandoutView } from "../handout/handout-view";
-import { filterViews, groupViewsByKind, aggregateFooter } from "../handout/handout-filter";
-import { parseTags, splitTagsForEdit } from "../handout/handout-create";
+import { filterViews, groupViewsByKind, aggregateFooter, collectTags } from "../handout/handout-filter";
+import { parseTags } from "../handout/handout-create";
 import { bodyToHtml, htmlToBody, isInlineEditable } from "../handout/body-text";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
-import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
+import type { HandoutKind } from "../handout/handout-flags";
 import { log } from "../utils/logger";
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -62,15 +62,6 @@ function buildActorOptions(pcs: Actor[], selectedId?: string): string {
     .join("");
 }
 
-/** categoryDict → .shp-check 체크박스 라벨 문자열. selectedKeys 의 키는 checked. */
-function buildTagChecks(dict: CategoryDict, selectedKeys: string[] = []): string {
-  return Object.entries(dict)
-    .map(([key, def]) => {
-      const checked = selectedKeys.includes(key) ? " checked" : "";
-      return `<label class="shp-check"><input type="checkbox" name="tag" value="${escapeHtml(key)}"${checked}><span class="shp-check__box"></span> ${escapeHtml(def.label)}</label>`;
-    })
-    .join("");
-}
 
 type PanelRow = HandoutView & { expanded: boolean };
 
@@ -94,8 +85,7 @@ interface CreateFormResult {
   actorId: string;
   surface: string;
   secret: string;
-  tags: string[];
-  freeTags: string;
+  tags: string;
   name: string;
 }
 
@@ -103,8 +93,7 @@ interface CreateFormResult {
 interface EditFormResult {
   kind: HandoutKind;
   actorId: string;
-  tags: string[];
-  freeTags: string;
+  tags: string;
   name: string;
   surface?: string;
   secret?: string;
@@ -201,7 +190,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const footer = aggregateFooter(rows);
     const categories = [
       { key: "", label: "전체" },
-      ...Object.entries(dict).map(([key, def]) => ({ key, label: def.label })),
+      ...collectTags(visible).map((t) => ({ key: t, label: t })),
     ].map((c) => ({ ...c, active: c.key === this.#activeTag }));
 
     // Cache count so the synchronous title getter can read it without re-querying.
@@ -457,10 +446,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
    * owner 는 kind 에 따라 actor/gm 분기. 권한 로직은 추가하지 않고 createHandout 에 위임.
    */
   protected static async _onCreate(this: HandoutPanel): Promise<void> {
-    const dict = (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
-    const result = await HandoutPanel._openCreateDialog(dict);
+    const result = await HandoutPanel._openCreateDialog();
     if (!result) return;
-    const tags = parseTags(result.tags, result.freeTags);
+    const tags = parseTags(result.tags);
     const owner: Owner =
       result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
     const api = game.modules.get(MODULE_ID)?.api;
@@ -482,12 +470,11 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
    * 플레이어 소유 액터가 0개면 PC 라디오 비활성·기본 떠도는·actorId 행 숨김 →
    * 항상 유효한 기본 상태이므로 폼 검증/재오픈이 불필요(리스크 §11 검증 단순화).
    */
-  protected static async _openCreateDialog(dict: CategoryDict): Promise<CreateFormResult | null> {
+  protected static async _openCreateDialog(): Promise<CreateFormResult | null> {
     const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
     const hasPc = pcs.length > 0;
 
     const actorOptions = buildActorOptions(pcs);
-    const tagChecks = buildTagChecks(dict);
 
     const pcAttrs = hasPc ? "checked" : "disabled";
     const floatingAttrs = hasPc ? "" : "checked";
@@ -509,8 +496,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         </div>
         <div class="shp-field"><div class="shp-field__label">표면</div><textarea class="shp-textarea" name="surface" rows="3"></textarea></div>
         <div class="shp-field"><div class="shp-field__label">비밀</div><textarea class="shp-textarea" name="secret" rows="3"></textarea></div>
-        <div class="shp-field"><div class="shp-field__label">태그</div><div class="shp-checklist shp-checklist--wrap">${tagChecks}</div></div>
-        <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags"></div>
+        <div class="shp-field"><div class="shp-field__label">태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="tags"></div>
       </div>`;
 
     const result = await DialogV2.wait(withDialogTheme({
@@ -546,12 +532,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             const actorId = el.querySelector<HTMLSelectElement>('select[name="actorId"]')?.value ?? "";
             const surface = el.querySelector<HTMLTextAreaElement>('textarea[name="surface"]')?.value ?? "";
             const secret = el.querySelector<HTMLTextAreaElement>('textarea[name="secret"]')?.value ?? "";
-            const tags = Array.from(
-              el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
-            ).map((o) => o.value);
-            const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
+            const tags = el.querySelector<HTMLInputElement>('input[name="tags"]')?.value ?? "";
             const name = el.querySelector<HTMLInputElement>('input[name="title"]')?.value ?? "";
-            const out: CreateFormResult = { kind, actorId, surface, secret, tags, freeTags, name };
+            const out: CreateFormResult = { kind, actorId, surface, secret, tags, name };
             return out;
           },
         },
@@ -573,10 +556,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!id) return;
     const doc = getHandoutDoc(id);
     if (!doc) return;
-    const dict = (getSetting(SETTINGS.categoryDict) as CategoryDict) ?? DEFAULT_CATEGORY_DICT;
-    const result = await HandoutPanel._openEditDialog(doc, dict);
+    const result = await HandoutPanel._openEditDialog(doc);
     if (!result) return;
-    const tags = parseTags(result.tags, result.freeTags);
+    const tags = parseTags(result.tags);
     const owner: Owner =
       result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
     const api = game.modules.get(MODULE_ID)?.api;
@@ -622,10 +604,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
    * 현재값 prefill: kind 라디오 체크, actorId select 선택, 태그(dict)는 선택·커스텀 태그는 freeTags.
    * 0-액터 처리(pc 비활성·기본 떠도는)·동적 토글·escapeHtml 은 생성과 동일.
    */
-  protected static async _openEditDialog(doc: HandoutDoc, dict: CategoryDict): Promise<EditFormResult | null> {
+  protected static async _openEditDialog(doc: HandoutDoc): Promise<EditFormResult | null> {
     const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
     const hasPc = pcs.length > 0;
-    const { selected: selectedTags, free: freeTagsValue } = splitTagsForEdit(doc.flags.tags, dict);
+    const tagsValue = doc.flags.tags.join(", ");
     const currentKind = doc.flags.kind;
     const currentActorId = doc.flags.owner.actorId;
 
@@ -660,8 +642,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         </div>
         ${bodyField("표면", "surface", surfaceContent)}
         ${bodyField("비밀", "secret", secretContent)}
-        <div class="shp-field"><div class="shp-field__label">태그</div><div class="shp-checklist shp-checklist--wrap">${buildTagChecks(dict, selectedTags)}</div></div>
-        <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags" value="${escapeHtml(freeTagsValue)}"></div>
+        <div class="shp-field"><div class="shp-field__label">태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="tags" value="${escapeHtml(tagsValue)}"></div>
       </div>`;
 
     const result = await DialogV2.wait(withDialogTheme({
@@ -695,10 +676,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             const kind = (el.querySelector<HTMLInputElement>('input[name="kind"]:checked')?.value ??
               "floating") as HandoutKind;
             const actorId = el.querySelector<HTMLSelectElement>('select[name="actorId"]')?.value ?? "";
-            const tags = Array.from(
-              el.querySelectorAll<HTMLInputElement>('input[name="tag"]:checked'),
-            ).map((o) => o.value);
-            const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
+            const tags = el.querySelector<HTMLInputElement>('input[name="tags"]')?.value ?? "";
             const name = el.querySelector<HTMLInputElement>('input[name="title"]')?.value ?? "";
             // textarea 가 있으면(=평문이라 인라인 편집 허용) 값 수집, 없으면(리치) 키 자체를 빼서 변경하지 않음.
             const surfaceEl = el.querySelector<HTMLTextAreaElement>('textarea[name="surface"]');
@@ -707,7 +685,6 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
               kind,
               actorId,
               tags,
-              freeTags,
               name,
               ...(surfaceEl ? { surface: surfaceEl.value } : {}),
               ...(secretEl ? { secret: secretEl.value } : {}),
