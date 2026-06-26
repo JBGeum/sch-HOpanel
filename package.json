@@ -1,6 +1,6 @@
 {
   "name": "sch-handout-panel",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Distribute TRPG handouts and manage secret permissions on top of Foundry JournalEntry.",
   "private": true,
   "type": "module",
