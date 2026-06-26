@@ -86,18 +86,16 @@ $r: $shp-radius;
   &[data-area="secret"][data-state="all"]      { @include chip(violet); }
 }
 
-// 카테고리 태그 — data-cat 로 톤 결정 --------------------------
-//  새 카테고리는 _tokens.scss 의 $shp-category-tone 에 추가 후 아래 루프가 자동 생성.
+// 태그 — 단일 중립(slate) 톤
 .shp-tag {
   @include tag(slate);
 }
-
 
 // 펼침 상세 ---------------------------------------------------
 .shp-detail {
   padding: 2px 16px 15px;
 
-  &__head {                            // "표면" / "비밀" / "카테고리" 라벨 줄
+  &__head {                            // "표면" / "비밀" 라벨 줄
     display: flex; align-items: center; gap: 7px;
     margin: 12px 0 6px;
     &:first-child { margin-top: 0; }
