@@ -1,6 +1,7 @@
-<article class="shp-row {{#if expanded}}shp-row--expanded{{/if}}" data-handout-id="{{id}}">
+<article class="shp-row {{#if expanded}}shp-row--expanded{{/if}}" data-handout-id="{{id}}" data-kind="{{kind}}">
   <div class="shp-row__head" data-action="toggle-expand">
     <div class="shp-row__owner">
+      {{#if @root.reorderable}}<span class="shp-row__drag" draggable="true" title="드래그하여 순서 변경"><i class="fa-solid fa-grip-vertical"></i></span>{{/if}}
       <span class="shp-type" data-type="{{kind}}">{{typeLabel}}</span>
       <span class="shp-row__name">{{name}}</span>
       {{#each tags}}<span class="shp-tag" data-cat="{{cat}}">{{label}}</span>{{/each}}
