@@ -1,0 +1,58 @@
+<article class="shp-row {{#if expanded}}shp-row--expanded{{/if}}" data-handout-id="{{id}}">
+  <div class="shp-row__head" data-action="toggle-expand">
+    <div class="shp-row__owner">
+      <span class="shp-type" data-type="{{kind}}">{{typeLabel}}</span>
+      <span class="shp-row__name">{{name}}</span>
+      {{#each tags}}<span class="shp-tag" data-cat="{{cat}}">{{label}}</span>{{/each}}
+    </div>
+    <span class="shp-chip" data-area="surface" data-state="{{surfaceChip.state}}">{{surfaceChip.label}}</span>
+    <span class="shp-chip" data-area="secret" data-state="{{secretChip.state}}">{{secretChip.label}}</span>
+    <span class="shp-row__caret"><i class="fa-solid fa-chevron-right"></i></span>
+  </div>
+
+  {{#if expanded}}
+  <div class="shp-detail">
+    <div class="shp-detail__head">
+      <span class="shp-detail__label">소유자</span>
+      <span class="shp-detail__spacer"></span>
+      <span class="shp-detail__value">{{ownerName}}</span>
+    </div>
+    <div class="shp-detail__head">
+      <span class="shp-detail__label">표면</span>
+      {{#if @root.isGM}}
+      <span class="shp-detail__spacer"></span>
+      <span class="shp-vis" data-area="surface" data-active="{{surfaceChip.state}}">
+        <button class="shp-vis__opt" data-action="surface-vis" data-mode="all" data-handout-id="{{id}}" type="button">전원</button>
+        <button class="shp-vis__opt" data-action="surface-vis" data-mode="limited" data-handout-id="{{id}}" type="button">일부</button>
+        <button class="shp-vis__opt" data-action="surface-vis" data-mode="hidden" data-handout-id="{{id}}" type="button">숨김</button>
+      </span>
+      {{/if}}
+    </div>
+    <div class="shp-detail__content">{{{surfaceContent}}}</div>
+
+    <div class="shp-detail__head">
+      <span class="shp-detail__label">비밀</span>
+      <span class="shp-detail__spacer"></span>
+      <span class="shp-chip" data-area="secret" data-state="{{secretChip.state}}">{{secretChip.label}}</span>
+    </div>
+    {{#if secretLocked}}
+      <div class="shp-detail__content shp-detail__content--locked"></div>
+    {{else}}
+      <div class="shp-detail__content shp-detail__content--secret">{{{secretContent}}}</div>
+    {{/if}}
+
+    <div class="shp-actions">
+      {{#if canManage}}<button class="shp-btn--reveal" data-action="reveal" data-handout-id="{{id}}" type="button">＋ 공개</button>{{/if}}
+      {{#if @root.isGM}}{{#if secretRevealed}}<button class="shp-btn shp-btn--danger" data-action="retract" data-handout-id="{{id}}" type="button">회수</button>{{/if}}{{/if}}
+      <span class="shp-actions__spacer"></span>
+      <button class="shp-btn" data-action="open-sheet" data-handout-id="{{id}}" type="button">시트 열기</button>
+      {{#if @root.isGM}}
+      <button class="shp-btn" data-action="share" data-area="surface" data-handout-id="{{id}}" type="button">표면 게시</button>
+      <button class="shp-btn" data-action="share" data-area="secret" data-handout-id="{{id}}" type="button">비밀 게시</button>
+      <button class="shp-btn" data-action="edit" data-handout-id="{{id}}" type="button">편집</button>
+      <button class="shp-btn shp-btn--danger" data-action="delete" data-handout-id="{{id}}" type="button">삭제</button>
+      {{/if}}
+    </div>
+  </div>
+  {{/if}}
+</article>

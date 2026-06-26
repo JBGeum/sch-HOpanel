@@ -1,0 +1,148 @@
+// =============================================================
+//  _dialog.scss — DialogV2 모달 (생성·편집·공개·표면일부·삭제)
+//  네이티브 DialogV2 프레임 + 패널과 동일 토큰(var(--shp-*)).
+//  루트에 classes:["sch-handout-panel","shp-dialog"] + data-theme 가
+//  걸려 토큰이 해석된다(handout-panel.ts withDialogTheme).
+//  컴포넌트 규칙은 .application.shp-dialog 하위로 스코프해
+//  Foundry 코어의 input/select/textarea/button 스타일과 안 싸운다.
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+@use "mixins" as *;
+
+$r: $shp-radius;
+
+.application.shp-dialog {
+  // 네이티브 window-content 를 패널 톤으로. 헤더 테마는
+  // _panel.scss 의 .application.sch-handout-panel > .window-header 규칙을 공유.
+  .window-content {
+    background: var(--shp-panel);
+    color: var(--shp-text);
+    font-family: $shp-font;
+  }
+
+  // 본문 래퍼
+  .shp-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 14px 16px;
+
+    &--message {
+      display: block;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--shp-content-tx);
+    }
+  }
+
+  // 비가역 경고
+  .shp-warn { color: var(--shp-danger-tx); font-weight: 800; }
+
+  // 필드 라벨
+  .shp-field {
+    display: flex;
+    flex-direction: column;
+    &__label {
+      font-size: 11px; font-weight: 800; letter-spacing: .03em;
+      color: var(--shp-subtext);
+      margin-bottom: 6px;
+      em { font-style: normal; font-weight: 500; color: var(--shp-muted); }
+    }
+  }
+
+  // 종류 라디오 그룹
+  .shp-fieldset {
+    border: 1px solid var(--shp-input-border);
+    border-radius: map.get($r, card);
+    padding: 6px 14px 12px;
+    margin: 0;
+    legend {
+      font-size: 11px; font-weight: 800; letter-spacing: .04em;
+      color: var(--shp-subtext);
+      padding: 0 6px;
+    }
+    &__opts { display: flex; gap: 18px; padding: 4px 2px 2px; }
+  }
+
+  // 입력류 공통
+  %shp-dlg-input {
+    width: 100%;
+    background: var(--shp-input-bg);
+    border: 1px solid var(--shp-input-border);
+    border-radius: map.get($r, input);
+    font-size: 13px;
+    color: var(--shp-text);
+    font-family: $shp-font;
+    &::placeholder { color: var(--shp-placeholder); }
+    &:focus-visible { @include focus-ring; }
+  }
+  .shp-input    { @extend %shp-dlg-input; padding: 8px 11px; }
+  // 단일 select 전용(태그는 이제 체크박스). 네이티브 select 의 세로 패딩 클리핑을
+  // 피하려고 명시 height + 가로 패딩만 사용한다.
+  .shp-select   { @extend %shp-dlg-input; height: 34px; padding: 0 11px; }
+  .shp-textarea { @extend %shp-dlg-input; min-height: 64px; padding: 9px 11px; line-height: 1.5; resize: vertical; }
+
+  // 라디오 / 체크 (네이티브 input + 형제 __box span)
+  .shp-radio, .shp-check {
+    display: inline-flex; align-items: center; gap: 9px;
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--shp-subtext);
+    input { position: absolute; opacity: 0; pointer-events: none; }
+  }
+  .shp-radio__box {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--shp-input-border);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none;
+  }
+  .shp-radio input:checked + .shp-radio__box { border-color: var(--shp-primary); }
+  .shp-radio input:checked + .shp-radio__box::after {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--shp-primary);
+  }
+  .shp-check__box {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--shp-input-border);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; color: transparent;
+    flex: none;
+  }
+  .shp-check input:checked + .shp-check__box {
+    background: var(--shp-primary); border-color: var(--shp-primary); color: #fff;
+  }
+  .shp-check input:checked + .shp-check__box::after { content: "✓"; }
+  .shp-check input:disabled + .shp-check__box { opacity: .55; }
+
+  // 체크 목록(공개/표면일부 = 세로 1열). 태그는 --wrap 으로 폭에 맞춰 줄바꿈.
+  .shp-checklist {
+    display: flex; flex-direction: column; gap: 8px;
+    &--wrap { flex-direction: row; flex-wrap: wrap; gap: 8px 14px; }
+  }
+
+  // 네이티브 버튼 행: 코어가 버튼에 flex:1 을 줘 폭을 분할하므로,
+  // 버튼을 내용 크기로 되돌리고(우측 정렬) 시안과 같은 모양으로 만든다.
+  // 푸터가 창 가장자리에 붙으므로 본문과 같은 가로 패딩 + 하단 여백을 준다.
+  .dialog-buttons,
+  .form-footer {
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px 14px;
+  }
+
+  // 버튼 (DialogV2 Button.class 로 부여). button 한정자로 코어 flex:1 을 이긴다.
+  button.shp-dbtn { flex: 0 0 auto; }
+  .shp-dbtn {
+    border-radius: map.get($r, input);
+    padding: 8px 16px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    font-family: $shp-font;
+    background: var(--shp-btn-bg);
+    color: var(--shp-btn-tx);
+    border: 1px solid var(--shp-btn-border);
+
+    &--primary { background: var(--shp-primary); color: #fff; border: 0; font-weight: 700; }
+    &--danger  { background: var(--shp-danger-tx); color: #fff; border: 0; font-weight: 700; }
+    &--danger-ghost { color: var(--shp-danger-tx); border-color: var(--shp-danger-border); }
+  }
+}

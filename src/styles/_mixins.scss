@@ -1,0 +1,49 @@
+// =============================================================
+//  _mixins.scss — 재사용 빌딩블록
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+
+// 상태 칩(둥근 알약 + 점) 한 벌. 톤 이름으로 var() 참조.
+@mixin chip($tone) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: map.get($shp-radius, chip);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  background: var(--shp-tone-#{$tone}-bg);
+  color:      var(--shp-tone-#{$tone}-fg);
+  border: 1px solid var(--shp-tone-#{$tone}-bd);
+
+  &::before {                 // 상태 점
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--shp-tone-#{$tone}-dot);
+    flex: none;
+  }
+}
+
+// 카테고리 태그(점 없는 작은 칩) 한 벌.
+@mixin tag($tone) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: map.get($shp-radius, chip);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  background: var(--shp-tone-#{$tone}-bg);
+  color:      var(--shp-tone-#{$tone}-fg);
+}
+
+@mixin focus-ring {
+  outline: 2px solid var(--shp-primary);
+  outline-offset: 1px;
+}

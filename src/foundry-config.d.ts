@@ -13,6 +13,18 @@ export {};
 
 declare module "fvtt-types/configuration" {
   /**
+   * getSceneControlButtons is rewritten in v13; fvtt-types has it commented out.
+   * Augment Hooks.HookConfig directly so Hooks.on("getSceneControlButtons", ...) type-checks.
+   * controls is a Record<string, SceneControls.Control> object in v13 (not an array).
+   */
+  namespace Hooks {
+    interface HookConfig {
+      getSceneControlButtons: (
+        controls: Record<string, foundry.applications.ui.SceneControls.Control>,
+      ) => void;
+    }
+  }
+  /**
    * "ready" 훅이 실행된 이후를 가정하여 game / game.settings / game.i18n 등을
    * undefined 가 아닌 초기화된 타입으로 다룬다. 모듈 코드는 init 이후에 실행되므로 안전하다.
    */
@@ -22,17 +34,37 @@ declare module "fvtt-types/configuration" {
 
   /** game.settings.register/get/set 에서 사용할 설정 키와 값 타입. */
   interface SettingConfig {
-    "sch-handout-panel.welcomed": boolean;
-    "sch-handout-panel.showHints": boolean;
+    "sch-handout-panel.theme": string;
+    "sch-handout-panel.categoryDict": Record<string, { label: string; tone: string }>;
     "sch-handout-panel.debugMode": boolean;
+  }
+
+  /**
+   * JournalEntry flag 타입 선언. JournalEntry.getFlag / setFlag 에서 타입이 추론된다.
+   * 구조: FlagConfig[DocumentName][Scope][FlagKey] = ValueType
+   */
+  interface FlagConfig {
+    JournalEntry: {
+      "sch-handout-panel": {
+        owner: import("./handout/reveal-state").Owner;
+        kind: import("./handout/handout-flags").HandoutKind;
+        tags: string[];
+        revealState: import("./handout/reveal-state").RevealState;
+      };
+    };
+    /** JournalEntryPage flag 타입 선언. page.getFlag / setFlag 에서 타입이 추론된다. */
+    JournalEntryPage: {
+      "sch-handout-panel": {
+        /** 페이지 구분: "surface" 또는 "secret". */
+        area: import("./constants").Area;
+      };
+    };
   }
 
   /** game.modules.get("sch-handout-panel").api 로 노출되는 공개 API 타입. */
   interface ModuleConfig {
     "sch-handout-panel": {
-      api: {
-        openExample: () => void;
-      };
+      api: import("./api/index").HandoutApi;
     };
   }
 }

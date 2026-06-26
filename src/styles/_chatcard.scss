@@ -1,0 +1,52 @@
+// =============================================================
+//  _chatcard.scss — 채팅 카드(핸드아웃 게시). 패널과 동일 토큰.
+//  카드 루트에 class="sch-handout-panel" + data-theme 를 부여해
+//  var(--shp-*) 를 해석시킨다(handout-chat.ts buildChatCard).
+//  모듈 CSS 는 전역 로드라 채팅 로그에서도 클래스가 적용된다.
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+
+$r: $shp-radius;
+
+.shp-chatcard {
+  background: var(--shp-panel);
+  border: 1px solid var(--shp-border);
+  border-left: 4px solid var(--shp-primary);
+  border-radius: map.get($r, card);
+  overflow: hidden;
+  color: var(--shp-text);
+  font-family: $shp-font;
+
+  &__header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--shp-border-soft);
+  }
+  &__name { font-size: 14px; font-weight: 800; color: var(--shp-text); }
+  &__sub { font-size: 11px; font-weight: 600; color: var(--shp-count-tx); margin-left: auto; }
+
+  &__label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 800; letter-spacing: .03em;
+    color: var(--shp-detail-label);
+    padding: 10px 13px 6px;
+    &::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none; }
+    &--surface::before { background: var(--shp-tone-green-dot); }
+    &--secret::before  { background: var(--shp-tone-violet-dot); }
+  }
+
+  &__content {
+    margin: 0 13px 13px;
+    font-size: 12.5px; line-height: 1.65;
+    border-radius: 9px; padding: 9px 11px;
+    background: var(--shp-content-bg);
+    border: 1px solid var(--shp-content-border);
+    color: var(--shp-content-tx);
+    &--secret {
+      background: var(--shp-secret-bg);
+      border: 1px dashed var(--shp-secret-border);
+      color: var(--shp-secret-tx);
+    }
+  }
+}

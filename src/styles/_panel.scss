@@ -1,0 +1,220 @@
+// =============================================================
+//  _panel.scss — 패널 셸 (툴바 · 필터 · 바디 · 푸터)
+//  레이아웃/구조만. 색은 전부 var(--shp-*).
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+
+$r: $shp-radius;
+
+// 루트 애플리케이션 컨테이너 ----------------------------------
+// app root has both .application and .sch-handout-panel (from DEFAULT_OPTIONS.classes).
+// Remove default window-content padding so the panel sits flush inside the native frame.
+.application.sch-handout-panel > .window-content {
+  padding: 0;
+}
+
+// 네이티브 .window-header 를 오리지널 .shp-titlebar 디자인으로 재스타일.
+// 반드시 .application.sch-handout-panel 하위로 스코프하여 다른 Foundry 창에 영향을 주지 않는다.
+// v13 DOM: header.window-header > i.window-icon + h1.window-title + button.header-control(⚙) + button.header-control(✕)
+.application.sch-handout-panel {
+  > .window-header {
+    background: var(--shp-header-bg);
+    border-bottom: 1px solid var(--shp-border);
+
+    .window-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--shp-text);
+      font-family: $shp-font;
+    }
+
+    // 아이콘(스크롤) 색상을 헤더 배경 위에서 읽기 쉽게.
+    .window-icon {
+      color: var(--shp-icon-tx);
+    }
+
+    // 오른쪽 컨트롤 버튼(⚙, ✕) — 모양은 native 유지, 색만 조정.
+    .header-control {
+      color: var(--shp-icon-tx);
+
+      &:hover {
+        color: var(--shp-text);
+      }
+    }
+  }
+}
+
+.sch-handout-panel {
+  // ApplicationV2 window-content 안에서 패널이 이 클래스를 갖는다고 가정.
+  font-family: $shp-font;
+  color: var(--shp-text);
+  -webkit-font-smoothing: antialiased;
+
+  // 밀도 기본값(= comfortable). data-skin 으로 _skins.scss 가 덮어쓴다.
+  --shp-row-py:    #{map.get($shp-density-comfortable, row-py)};
+  --shp-row-px:    #{map.get($shp-density-comfortable, row-px)};
+  --shp-group-py:  #{map.get($shp-density-comfortable, group-py)};
+  --shp-gap-chip:  #{map.get($shp-density-comfortable, gap-chip)};
+  --shp-name-size: #{map.get($shp-density-comfortable, name-size)};
+
+  *, *::before, *::after { box-sizing: border-box; }
+}
+
+// .shp-panel fills the window-content flush. Drop outer border/border-radius
+// since the native ApplicationV2 window frame already provides structure.
+.shp-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--shp-panel);
+  overflow: hidden;
+  transition: background .2s;
+}
+
+// 툴바(검색 + 생성) -------------------------------------------
+.shp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--shp-border-soft);
+
+  &__search {
+    flex: 1;
+    display: flex; align-items: center; gap: 7px;
+    background: var(--shp-input-bg);
+    border: 1px solid var(--shp-input-border);
+    border-radius: map.get($r, input);
+    padding: 0 7px;
+    color: var(--shp-placeholder);
+    font-size: 12px;
+
+    // 내부 input 은 Foundry 기본 var(--input-background-color)(어두움)를 쓰므로,
+    // 라벨 박스(--shp-input-bg) 위에서 투명 처리하고 텍스트 색만 지정한다.
+    input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--shp-text);
+      font-family: $shp-font;
+      font-size: 12px;
+      &::placeholder { color: var(--shp-placeholder); }
+    }
+  }
+}
+
+.shp-btn--primary {
+  background: var(--shp-primary);
+  color: #fff;
+  border: 0;
+  border-radius: map.get($r, input);
+  padding: 7px 13px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: $shp-font;
+}
+
+// 카테고리 필터 바 --------------------------------------------
+.shp-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--shp-border-soft);
+  flex-wrap: wrap;
+
+  &__label {
+    font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    color: var(--shp-muted);
+  }
+}
+
+.shp-fchip {                       // 필터 칩 (off 상태가 기본)
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: map.get($r, chip);
+  font-size: 11px; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--shp-btn-bg);
+  color: var(--shp-subtext);
+  border: 1px solid var(--shp-border-soft);
+
+  &__dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  // 활성(전체 칩) — primary 채움
+  &--all.is-active {
+    background: var(--shp-primary);
+    color: #fff;
+    border-color: var(--shp-primary);
+  }
+  // 활성(카테고리 칩) — 해당 톤. 톤은 JS 가 data-cat 로 지정 → _row.scss 매핑.
+}
+
+// 컬럼 헤더(리스트 스킨 전용 — _skins.scss 에서 토글) ----------
+.shp-colhead {
+  display: grid;
+  grid-template-columns: 1fr auto auto 16px;
+  gap: 10px;
+  padding: 7px 14px;
+  background: var(--shp-col-head-bg);
+  border-bottom: 1px solid var(--shp-border-soft);
+  font-size: 10px; font-weight: 800; letter-spacing: .04em;
+  color: var(--shp-muted);
+}
+
+// 바디(스크롤 영역) -------------------------------------------
+.shp-body {
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+// 그룹 헤더(그룹 보기에서만 렌더) ------------------------------
+.shp-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: var(--shp-group-py) 14px;
+  background: var(--shp-group-bg);
+  border-bottom: 1px solid var(--shp-border-soft);
+  position: sticky; top: 0; z-index: 1;
+
+  &__dot { width: 7px; height: 7px; border-radius: 50%; }
+  &__title { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; color: var(--shp-group-tx); }
+  &__count { font-size: 10px; font-weight: 700; color: var(--shp-muted); }
+}
+
+// 보기 토글 세그(.shp-vis 재사용) — 활성은 패널 data-view 기준(기존 seg-on 토큰 재사용).
+.sch-handout-panel[data-view="list"]  .shp-vis--view .shp-vis__opt[data-view-set="list"],
+.sch-handout-panel[data-view="group"] .shp-vis--view .shp-vis__opt[data-view-set="group"] {
+  font-weight: 700;
+  background: var(--shp-seg-on-bg);
+  color: var(--shp-seg-on-tx);
+}
+
+// 그룹 헤더 점 색(타입 토큰 재사용).
+.shp-group__dot {
+  &[data-type="pc"]       { background: var(--shp-type-pc-fg); }
+  &[data-type="floating"] { background: var(--shp-type-floating-fg); }
+}
+
+// 푸터 --------------------------------------------------------
+.shp-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--shp-border-soft);
+  background: var(--shp-col-head-bg);
+  font-size: 11px;
+  color: var(--shp-muted);
+
+  &__spacer { flex: 1; }
+  b { color: var(--shp-subtext); }
+}

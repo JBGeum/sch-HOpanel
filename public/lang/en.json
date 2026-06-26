@@ -1,16 +1,13 @@
 {
-  "SCH.Settings.Welcomed.Name": "Welcomed",
-  "SCH.Settings.Welcomed.Hint": "Whether the initial greeting has been completed (world).",
-  "SCH.Settings.ShowHints.Name": "Show Hints",
-  "SCH.Settings.ShowHints.Hint": "Show helper hints in the example window (per client).",
+  "SCH.Settings.Theme.Name": "Panel Theme",
+  "SCH.Settings.Theme.Hint": "Light/dark theme for the handout panel (per client).",
+  "SCH.Settings.CategoryDict.Name": "Category Dictionary",
+  "SCH.Settings.CategoryDict.Hint": "Maps category keys to label and tone (world-wide).",
   "SCH.Settings.DebugMode.Name": "Debug Mode",
-  "SCH.Settings.DebugMode.Hint": "Enable verbose debug logging to the console (per client).",
-  "SCH.ExampleApp.Title": "SCH Handout Panel — Example",
-  "SCH.ExampleApp.Intro": "This is an ApplicationV2 + Handlebars example window.",
-  "SCH.ExampleApp.Hint": "Tip: toggle 'Show Hints' in the module settings to hide this line.",
-  "SCH.ExampleApp.Status": "Status",
-  "SCH.ExampleApp.Welcomed": "Welcomed",
-  "SCH.ExampleApp.NotWelcomed": "Not welcomed yet",
-  "SCH.ExampleApp.GreetButton": "Greet",
-  "SCH.ExampleApp.Greeting": "Hello from SCH Handout Panel!"
+  "SCH.Settings.DebugMode.Hint": "Print verbose debug logs to the console (per client).",
+  "SCH.Panel.Title": "Handout Panel",
+  "SCH.Panel.ThemeLight": "Switch to Light Mode",
+  "SCH.Panel.ThemeDark": "Switch to Dark Mode",
+  "SCH.Controls.HandoutPanel": "Handouts",
+  "SCH.Controls.OpenPanel": "Open Handout Panel"
 }

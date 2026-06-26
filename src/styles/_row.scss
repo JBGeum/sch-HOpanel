@@ -1,0 +1,232 @@
+// =============================================================
+//  _row.scss — 핸드아웃 행 · 상태칩 · 카테고리태그 · 펼침 상세
+//  상태는 data-attribute 로 표현 → JS 가 el.dataset 만 바꾸면 됨.
+// =============================================================
+@use "sass:map";
+@use "tokens" as *;
+@use "mixins" as *;
+
+$r: $shp-radius;
+
+// 공개 포커스 강조 펄스(1.5s, 1회). 테마 accent 를 옅게 → 투명으로.
+@keyframes shp-row-flash {
+  0%   { background: color-mix(in srgb, var(--shp-primary) 24%, transparent); }
+  100% { background: transparent; }
+}
+
+// 행 래퍼 -----------------------------------------------------
+.shp-row {
+  border-bottom: 1px solid var(--shp-row-border);
+
+  &--expanded {
+    background: var(--shp-expand-bg);
+    border-top: 1px solid var(--shp-expand-border);
+    border-bottom: 1px solid var(--shp-expand-border);
+  }
+
+  &--flash { animation: shp-row-flash 1.5s ease-out; }
+
+  // 행 머리(클릭 영역) — 소유자 | 표면 | 비밀 | caret
+  &__head {
+    display: grid;
+    grid-template-columns: 1fr auto auto 16px;
+    gap: 10px;
+    align-items: center;
+    padding: var(--shp-row-py) var(--shp-row-px);
+    cursor: pointer;
+    &:hover { background: var(--shp-row-hover); }
+  }
+
+  &__owner {
+    display: flex; align-items: center; gap: 7px; min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--shp-name-size);
+    font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  &--expanded &__name { font-weight: 700; }
+
+  &__caret {
+    justify-self: end;
+    font-size: 13px;
+    color: var(--shp-caret);
+    transition: transform .15s, color .15s;
+  }
+  &--expanded &__caret {
+    color: var(--shp-caret-open);
+    transform: rotate(90deg);
+  }
+}
+
+// 소유자 타입 태그(PC / 떠도는) -------------------------------
+.shp-type {
+  display: inline-flex; align-items: center;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 10px; font-weight: 700;
+  flex: none;
+  &[data-type="pc"]       { background: var(--shp-type-pc-bg);       color: var(--shp-type-pc-fg); }
+  &[data-type="floating"] { background: var(--shp-type-floating-bg); color: var(--shp-type-floating-fg); }
+}
+
+// 상태 칩 — 표면/비밀. data-area + data-state 로 톤 결정 --------
+//  JS:  chip.dataset.area="surface"; chip.dataset.state="all";
+.shp-chip {
+  @include chip(slate);                 // 기본(폴백) 톤
+
+  // 표면(surface)
+  &[data-area="surface"][data-state="all"]     { @include chip(green);  }
+  &[data-area="surface"][data-state="limited"] { @include chip(amber);  }
+  &[data-area="surface"][data-state="hidden"]  { @include chip(rose);   }
+  // 비밀(secret)
+  &[data-area="secret"][data-state="owner"]    { @include chip(slate);  }
+  &[data-area="secret"][data-state="limited"]  { @include chip(blue);   }
+  &[data-area="secret"][data-state="all"]      { @include chip(violet); }
+}
+
+// 카테고리 태그 — data-cat 로 톤 결정 --------------------------
+//  새 카테고리는 _tokens.scss 의 $shp-category-tone 에 추가 후 아래 루프가 자동 생성.
+.shp-tag {
+  @include tag(slate);
+  @each $cat, $tone in $shp-category-tone {
+    &[data-cat="#{$cat}"] { @include tag($tone); }
+  }
+}
+
+// 필터 칩의 카테고리 활성색도 같은 매핑 재사용
+.shp-fchip {
+  @each $cat, $tone in $shp-category-tone {
+    &[data-cat="#{$cat}"].is-active {
+      background: var(--shp-tone-#{$tone}-bg);
+      color: var(--shp-tone-#{$tone}-fg);
+      border-color: var(--shp-tone-#{$tone}-dot);
+    }
+    &[data-cat="#{$cat}"] .shp-fchip__dot { background: var(--shp-tone-#{$tone}-dot); }
+  }
+}
+
+// 펼침 상세 ---------------------------------------------------
+.shp-detail {
+  padding: 2px 16px 15px;
+
+  &__head {                            // "표면" / "비밀" / "카테고리" 라벨 줄
+    display: flex; align-items: center; gap: 7px;
+    margin: 12px 0 6px;
+    &:first-child { margin-top: 0; }
+  }
+  &__label { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: var(--shp-detail-label); }
+  &__hint  { font-size: 10px; color: var(--shp-muted); }
+  &__value { font-size: 12px; color: var(--shp-content-tx); }
+  &__spacer { flex: 1; }
+
+  &__content {
+    font-size: 12px; line-height: 1.65;
+    background: var(--shp-content-bg);
+    border: 1px solid var(--shp-content-border);
+    color: var(--shp-content-tx);
+    border-radius: map.get($r, input);
+    padding: 9px 11px;
+  }
+  &__content--secret {
+    background: var(--shp-secret-bg);
+    border: 1px dashed var(--shp-secret-border);
+    color: var(--shp-secret-tx);
+  }
+
+  // 비권한자에게 보이는 잠긴 비밀(흐림 + 자물쇠). 내용 텍스트는 DOM 미주입.
+  &__content--locked {
+    position: relative;
+    min-height: 38px;
+    color: transparent;
+    user-select: none;
+    background:
+      repeating-linear-gradient(135deg,
+        var(--shp-secret-bg) 0 8px,
+        var(--shp-content-bg) 8px 16px);
+    &::after {
+      content: "🔒 비공개";
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--shp-muted);
+    }
+  }
+}
+
+// 가시성 세그먼트(전원/일부/숨김) -----------------------------
+.shp-vis {
+  display: inline-flex;
+  border: 1px solid var(--shp-input-border);
+  border-radius: map.get($r, seg);
+  overflow: hidden;
+
+  &__opt {
+    padding: 4px 11px;
+    font-size: 11px; font-weight: 600;
+    font-family: $shp-font;
+    background: var(--shp-seg-off-bg);
+    color: var(--shp-seg-off-tx);
+    border: 0;
+    cursor: pointer;
+    & + & { border-left: 1px solid var(--shp-border-soft); }
+  }
+
+  // 활성: 컨테이너 data-active 가 버튼 data-mode 와 일치(Handlebars 비교 헬퍼 불필요)
+  &[data-active="all"]     &__opt[data-mode="all"],
+  &[data-active="limited"] &__opt[data-mode="limited"],
+  &[data-active="hidden"]  &__opt[data-mode="hidden"] {
+    font-weight: 700;
+    background: var(--shp-seg-on-bg);
+    color: var(--shp-seg-on-tx);
+  }
+}
+
+// 카테고리 편집 칩(× 달림) + 추가 버튼 -------------------------
+.shp-editchip {
+  @include chip(slate);
+  cursor: default;
+  @each $cat, $tone in $shp-category-tone {
+    &[data-cat="#{$cat}"] { @include chip($tone); }
+  }
+  &__remove { opacity: .5; font-weight: 700; margin-left: 1px; cursor: pointer; }
+}
+.shp-addtag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 9px;
+  border-radius: map.get($r, chip);
+  font-size: 11px; font-weight: 600;
+  border: 1px dashed var(--shp-input-border);
+  color: var(--shp-muted);
+  cursor: pointer;
+}
+
+// 액션 버튼 줄 ------------------------------------------------
+.shp-actions {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 14px; flex-wrap: wrap;
+  &__spacer { flex: 1; }
+}
+.shp-btn {
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  font-family: $shp-font;
+  background: var(--shp-btn-bg);
+  color: var(--shp-btn-tx);
+  border: 1px solid var(--shp-btn-border);
+
+  &--reveal {                 // 강조(공개)
+    background: var(--shp-primary); color: #fff; border: 0;
+    font-weight: 700; padding: 6px 14px;
+  }
+  &--create {                 // 생성 CTA(primary 채움)
+    background: var(--shp-primary); color: #fff; border: 0;
+    font-weight: 700;
+  }
+  &--danger {                 // 회수/삭제
+    color: var(--shp-danger-tx);
+    border-color: var(--shp-danger-border);
+  }
+}

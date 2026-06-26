@@ -1,0 +1,39 @@
+<section class="sch-handout-panel" data-theme="{{theme}}" data-view="{{view}}" data-skin="a">
+  <div class="shp-panel">
+    <div class="shp-toolbar">
+      <label class="shp-toolbar__search"><i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{query}}" placeholder="이름·소유자·내용 검색"></label>
+      <span class="shp-vis shp-vis--view">
+        <button class="shp-vis__opt" data-action="set-view" data-view-set="list" type="button">리스트</button>
+        <button class="shp-vis__opt" data-action="set-view" data-view-set="group" type="button">그룹</button>
+      </span>
+      {{#if isGM}}<button class="shp-btn shp-btn--create" data-action="create" type="button">＋ 핸드아웃</button>{{/if}}
+    </div>
+
+    <div class="shp-filters">
+      <span class="shp-filters__label">카테고리</span>
+      {{#each categories}}
+      <button class="shp-fchip{{#unless key}} shp-fchip--all{{/unless}}{{#if active}} is-active{{/if}}" data-cat="{{key}}" data-action="filter" data-filter="{{key}}" type="button">{{label}}</button>
+      {{/each}}
+    </div>
+
+    <div class="shp-colhead"><span>소유자 · 카테고리</span><span>표면</span><span>비밀</span><span></span></div>
+
+    <div class="shp-body">
+      {{#if groups}}
+        {{#each groups}}
+        <div class="shp-group"><span class="shp-group__dot" data-type="{{kind}}"></span><span class="shp-group__title">{{label}}</span><span class="shp-group__count">{{rows.length}}</span></div>
+        {{#each rows}}{{> handout-row this}}{{/each}}
+        {{/each}}
+      {{else}}
+        {{#each rows}}{{> handout-row this}}{{/each}}
+      {{/if}}
+    </div>
+
+    <footer class="shp-footer">
+      <span>총 {{footer.total}}개 · PC {{footer.pc}} · 공용 {{footer.floating}}</span>
+      <span class="shp-footer__spacer"></span>
+      <span>공개 대기 <b>{{footer.pending}}</b></span>
+    </footer>
+  </div>
+</section>
