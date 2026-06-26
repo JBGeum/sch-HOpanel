@@ -1,5 +1,5 @@
 import { MODULE_ID, SETTINGS } from "../constants";
-import { getSetting, setSetting, DEFAULT_CATEGORY_DICT } from "../settings";
+import { getSetting, setSetting } from "../settings";
 import { getHandoutDoc, type HandoutDoc } from "../handout/handout-repo";
 import { listVisibleViews, type HandoutView } from "../handout/handout-view";
 import { filterViews, groupViewsByKind, aggregateFooter, collectTags } from "../handout/handout-filter";
@@ -177,12 +177,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   ): Promise<PanelContext> {
     const base = await super._prepareContext(options);
     const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
-    const dict =
-      (getSetting(SETTINGS.categoryDict) as Record<string, { label: string; tone: string }>) ??
-      DEFAULT_CATEGORY_DICT;
 
     // 보이는 집합 계산은 listVisibleViews 단일 출처(반응성 핸들러와 공유).
-    const visible = listVisibleViews(dict);
+    const visible = listVisibleViews();
 
     const filtered = filterViews(visible, { query: this.#query, tag: this.#activeTag });
     const rows: PanelRow[] = filtered.map((v) => ({ ...v, expanded: this.#expanded.has(v.id) }));
@@ -601,7 +598,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * 편집 폼 다이얼로그(DialogV2.wait). 생성 다이얼로그와 동일 구조이되 본문(표면/비밀) 없음 +
-   * 현재값 prefill: kind 라디오 체크, actorId select 선택, 태그(dict)는 선택·커스텀 태그는 freeTags.
+   * 현재값 prefill: kind 라디오 체크, actorId select 선택, 태그는 자유 입력(쉼표 구분)으로 prefill.
    * 0-액터 처리(pc 비활성·기본 떠도는)·동적 토글·escapeHtml 은 생성과 동일.
    */
   protected static async _openEditDialog(doc: HandoutDoc): Promise<EditFormResult | null> {
