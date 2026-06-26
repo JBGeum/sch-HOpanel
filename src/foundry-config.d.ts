@@ -48,6 +48,7 @@ declare module "fvtt-types/configuration" {
         owner: import("./handout/reveal-state").Owner;
         kind: import("./handout/handout-flags").HandoutKind;
         tags: string[];
+        order: number;
         revealState: import("./handout/reveal-state").RevealState;
       };
     };

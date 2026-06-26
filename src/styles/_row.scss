@@ -60,6 +60,23 @@ $r: $shp-radius;
   }
 }
 
+// 드래그 핸들 + 드래그/드롭 상태 -------------------------------
+//  reorderable(GM·무필터·무검색)일 때만 핸들이 렌더된다(handout-row.hbs).
+.shp-row__drag {
+  flex: none;
+  display: inline-flex; align-items: center;
+  padding: 0 1px;
+  font-size: 12px;
+  color: var(--shp-icon-tx);
+  cursor: grab;
+  &:hover  { color: var(--shp-subtext); }
+  &:active { cursor: grabbing; }
+}
+
+.shp-row--dragging   { opacity: .45; }
+.shp-row--drop-before { box-shadow: inset 0 2px 0 var(--shp-primary); }
+.shp-row--drop-after  { box-shadow: inset 0 -2px 0 var(--shp-primary); }
+
 // 소유자 타입 태그(PC / 떠도는) -------------------------------
 .shp-type {
   display: inline-flex; align-items: center;

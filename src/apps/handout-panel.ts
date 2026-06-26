@@ -1,10 +1,11 @@
 import { MODULE_ID, SETTINGS } from "../constants";
 import { getSetting, setSetting } from "../settings";
-import { getHandoutDoc, type HandoutDoc } from "../handout/handout-repo";
+import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
 import { listVisibleViews, type HandoutView } from "../handout/handout-view";
 import { filterViews, groupViewsByKind, aggregateFooter, collectTags } from "../handout/handout-filter";
 import { parseTags } from "../handout/handout-create";
 import { bodyToHtml, htmlToBody, isInlineEditable } from "../handout/body-text";
+import { computeReorder } from "../handout/handout-order";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
 import type { HandoutKind } from "../handout/handout-flags";
 import { log } from "../utils/logger";
@@ -70,6 +71,7 @@ interface PanelContext extends foundry.applications.api.ApplicationV2.RenderCont
   isDark: boolean;
   isGM: boolean;
   view: "list" | "group";
+  reorderable: boolean;
   query: string;
   activeTag: string;
   categories: { key: string; label: string; active: boolean }[];
@@ -190,6 +192,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       ...collectTags(visible).map((t) => ({ key: t, label: t })),
     ].map((c) => ({ ...c, active: c.key === this.#activeTag }));
 
+    // 드래그 재정렬 가능 조건: GM 이고, 부분 목록 모호성을 피하기 위해 필터·검색이 모두 비활성일 때만.
+    const reorderable =
+      (game.user?.isGM ?? false) && this.#query === "" && this.#activeTag === "";
+
     // Cache count so the synchronous title getter can read it without re-querying.
     this.#lastCount = rows.length;
 
@@ -199,6 +205,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       isDark: theme === "dark",
       isGM: game.user?.isGM ?? false,
       view: this.#view,
+      reorderable,
       query: this.#query,
       activeTag: this.#activeTag,
       categories,
@@ -282,6 +289,85 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         }
       }
     }
+
+    // ── 드래그 재정렬 ──────────────────────────────────────────────
+    // 핸들은 reorderable(GM·무필터·무검색)일 때만 렌더된다. 핸들만 draggable 이고,
+    // 행 전체가 드롭 타겟. 재렌더는 reorderHandouts → updateJournalEntry 반응성 훅이 담당.
+    const handles = this.element.querySelectorAll<HTMLElement>(".shp-row__drag");
+    if (handles.length > 0) {
+      let draggedId: string | null = null;
+      let draggedKind: string | undefined;
+
+      const clearIndicators = (): void => {
+        this.element
+          .querySelectorAll(".shp-row--drop-before, .shp-row--drop-after")
+          .forEach((el) => el.classList.remove("shp-row--drop-before", "shp-row--drop-after"));
+      };
+
+      handles.forEach((handle) => {
+        const row = handle.closest<HTMLElement>(".shp-row");
+        if (!row) return;
+        // 핸들 클릭(드래그 아님)이 head 의 toggle-expand 로 버블링되지 않게 차단.
+        handle.addEventListener("click", (ev) => ev.stopPropagation());
+        handle.addEventListener("dragstart", (ev: DragEvent) => {
+          draggedId = row.dataset.handoutId ?? null;
+          draggedKind = row.dataset.kind;
+          if (ev.dataTransfer && draggedId) {
+            ev.dataTransfer.setData("text/plain", draggedId);
+            ev.dataTransfer.effectAllowed = "move";
+          }
+          row.classList.add("shp-row--dragging");
+        });
+        handle.addEventListener("dragend", () => {
+          draggedId = null;
+          draggedKind = undefined;
+          row.classList.remove("shp-row--dragging");
+          clearIndicators();
+        });
+      });
+
+      this.element.querySelectorAll<HTMLElement>(".shp-row").forEach((row) => {
+        row.addEventListener("dragover", (ev: DragEvent) => {
+          if (!draggedId) return;
+          const targetId = row.dataset.handoutId;
+          if (!targetId || targetId === draggedId) { clearIndicators(); return; }
+          // group 보기에서는 동종 kind 그룹 내에서만 허용(cross-group 드롭 금지).
+          if (this.#view === "group" && draggedKind !== undefined && row.dataset.kind !== draggedKind) {
+            if (ev.dataTransfer) ev.dataTransfer.dropEffect = "none";
+            clearIndicators();
+            return; // preventDefault 생략 → 드롭 불가
+          }
+          ev.preventDefault();
+          if (ev.dataTransfer) ev.dataTransfer.dropEffect = "move";
+          const rect = row.getBoundingClientRect();
+          const after = ev.clientY > rect.top + rect.height / 2;
+          clearIndicators();
+          row.classList.add(after ? "shp-row--drop-after" : "shp-row--drop-before");
+        });
+        row.addEventListener("drop", (ev: DragEvent) => {
+          if (!draggedId) return;
+          const targetId = row.dataset.handoutId;
+          if (!targetId || targetId === draggedId) {
+            clearIndicators();
+            return;
+          }
+          if (this.#view === "group" && draggedKind !== undefined && row.dataset.kind !== draggedKind) {
+            clearIndicators();
+            return;
+          }
+          ev.preventDefault();
+          const rect = row.getBoundingClientRect();
+          const pos: "before" | "after" =
+            ev.clientY > rect.top + rect.height / 2 ? "after" : "before";
+          const moved = draggedId;
+          clearIndicators();
+          void HandoutPanel._applyReorder(moved, targetId, pos);
+        });
+        row.addEventListener("dragleave", () => {
+          row.classList.remove("shp-row--drop-before", "shp-row--drop-after");
+        });
+      });
+    }
   }
 
   /**
@@ -335,6 +421,26 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const v = target.dataset.viewSet;
     if (v === "list" || v === "group") this.#view = v;
     void this.render();
+  }
+
+  /**
+   * 드롭 결과를 적용한다(GM 전용 경로). repo 에서 현재 정렬된 전체 docs 를 읽어
+   * (id, order) 시퀀스를 만들고 computeReorder 로 변경분만 산출 → 공개 API 로 persist.
+   * GM 의 listHandoutDocs 는 hidden 포함 전체 핸드아웃이라 전역 order 시퀀스와 동치.
+   * 재렌더는 updateJournalEntry 반응성 훅이 담당(여기서 render 호출 안 함).
+   */
+  protected static async _applyReorder(
+    movedId: string,
+    targetId: string,
+    pos: "before" | "after",
+  ): Promise<void> {
+    const docs = listHandoutDocs();
+    const items = docs.map((d) => ({ id: d.entry.id ?? "", order: d.flags.order }));
+    const updates = computeReorder(items, movedId, targetId, pos);
+    if (updates.length === 0) return;
+    const api = game.modules.get(MODULE_ID)?.api;
+    await api?.reorderHandouts(updates);
+    log.info("reorderHandouts requested", updates.length);
   }
 
   protected static _onToggleExpand(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): void {

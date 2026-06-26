@@ -6,6 +6,7 @@ import {
   deleteHandoutDoc,
   getHandoutDoc,
   listHandoutDocs,
+  reorderHandoutDocs,
   updateHandoutBodyDoc,
   type HandoutDoc,
 } from "../handout/handout-repo";
@@ -42,6 +43,7 @@ export interface HandoutApi {
     surface: { mode: SurfaceMode; revealedTo: string[] },
   ): Promise<void>;
   shareToChat(id: string, area: "surface" | "secret"): Promise<void>;
+  reorderHandouts(updates: { id: string; order: number }[]): Promise<void>;
 }
 
 export function buildApi(): HandoutApi {
@@ -163,6 +165,11 @@ export function buildApi(): HandoutApi {
         theme: (getSetting(SETTINGS.theme) as string) ?? "light",
       });
       await ChatMessage.create({ content, speaker: ChatMessage.getSpeaker() });
+    },
+
+    async reorderHandouts(updates) {
+      if (!game.user?.isGM) throw new Error("reorderHandouts: GM only");
+      await reorderHandoutDocs(updates);
     },
   };
 }
