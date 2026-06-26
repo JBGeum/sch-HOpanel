@@ -12,6 +12,7 @@ export function sortByOrder<T>(items: T[], getOrder: (item: T) => number | undef
     .map((item, i) => ({ item, i }))
     .sort(
       (a, b) =>
+        // 둘 다 undefined → Infinity - Infinity = NaN(falsy) → || 우항 a.i - b.i 로 fall-through(입력 순서 보존).
         (getOrder(a.item) ?? Infinity) - (getOrder(b.item) ?? Infinity) || a.i - b.i,
     )
     .map((e) => e.item);
@@ -41,8 +42,8 @@ export function computeReorder(
   const next = [...without.slice(0, insertAt), movedItem, ...without.slice(insertAt)];
 
   const updates: { id: string; order: number }[] = [];
-  next.forEach((it, order) => {
-    if (it.order !== order) updates.push({ id: it.id, order });
+  next.forEach((it, newOrder) => {
+    if (it.order !== newOrder) updates.push({ id: it.id, order: newOrder });
   });
   return updates;
 }

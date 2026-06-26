@@ -249,9 +249,9 @@ export async function reorderHandoutDocs(
   updates: { id: string; order: number }[],
 ): Promise<void> {
   if (updates.length === 0) return;
-  const data = updates.map((u) => ({
+  const flagUpdates = updates.map((u) => ({
     _id: u.id,
     flags: { [FLAG_SCOPE]: { order: u.order } },
   }));
-  await (JournalEntry.updateDocuments as (docs: object[]) => Promise<unknown>)(data);
+  await (JournalEntry.updateDocuments as (docs: object[]) => Promise<unknown>)(flagUpdates);
 }

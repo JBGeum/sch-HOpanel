@@ -330,10 +330,11 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         row.addEventListener("dragover", (ev: DragEvent) => {
           if (!draggedId) return;
           const targetId = row.dataset.handoutId;
-          if (!targetId || targetId === draggedId) return;
+          if (!targetId || targetId === draggedId) { clearIndicators(); return; }
           // group 보기에서는 동종 kind 그룹 내에서만 허용(cross-group 드롭 금지).
-          if (this.#view === "group" && draggedKind && row.dataset.kind !== draggedKind) {
+          if (this.#view === "group" && draggedKind !== undefined && row.dataset.kind !== draggedKind) {
             if (ev.dataTransfer) ev.dataTransfer.dropEffect = "none";
+            clearIndicators();
             return; // preventDefault 생략 → 드롭 불가
           }
           ev.preventDefault();
@@ -350,7 +351,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             clearIndicators();
             return;
           }
-          if (this.#view === "group" && draggedKind && row.dataset.kind !== draggedKind) {
+          if (this.#view === "group" && draggedKind !== undefined && row.dataset.kind !== draggedKind) {
             clearIndicators();
             return;
           }
@@ -361,6 +362,9 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           const moved = draggedId;
           clearIndicators();
           void HandoutPanel._applyReorder(moved, targetId, pos);
+        });
+        row.addEventListener("dragleave", () => {
+          row.classList.remove("shp-row--drop-before", "shp-row--drop-after");
         });
       });
     }
