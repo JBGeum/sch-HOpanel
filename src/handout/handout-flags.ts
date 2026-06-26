@@ -10,12 +10,6 @@ export interface HandoutFlags {
   revealState: RevealState;
 }
 
-export interface CategoryDef {
-  label: string;
-  tone: string;
-}
-export type CategoryDict = Record<string, CategoryDef>;
-
 /**
  * createHandout 기본 공개상태(spec §3-3).
  * 표면은 hidden(GM·소유자만)으로 시작한다 — 생성 즉시 전원 공개되는 사고를 막기 위함.
