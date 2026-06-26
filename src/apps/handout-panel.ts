@@ -4,6 +4,7 @@ import { getHandoutDoc, type HandoutDoc } from "../handout/handout-repo";
 import { listVisibleViews, type HandoutView } from "../handout/handout-view";
 import { filterViews, groupViewsByKind, aggregateFooter } from "../handout/handout-filter";
 import { parseTags, splitTagsForEdit } from "../handout/handout-create";
+import { bodyToHtml, htmlToBody, isInlineEditable } from "../handout/body-text";
 import type { Owner, SurfaceMode } from "../handout/reveal-state";
 import type { CategoryDict, HandoutKind } from "../handout/handout-flags";
 import { log } from "../utils/logger";
@@ -465,8 +466,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       owner,
       kind: result.kind,
       tags,
-      surface: result.surface,
-      secret: result.secret,
+      surface: bodyToHtml(result.surface),
+      secret: bodyToHtml(result.secret),
       name: result.name,
     });
     log.info("createHandout requested", owner, tags);
