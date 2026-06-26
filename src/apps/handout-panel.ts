@@ -99,13 +99,15 @@ interface CreateFormResult {
   name: string;
 }
 
-/** 편집 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값(본문 없음). */
+/** 편집 다이얼로그 ok 콜백이 dialog.element 에서 수집해 반환하는 폼 값. 본문은 인라인 편집 가능한 경우에만 포함(absent = 변경 안 함). */
 interface EditFormResult {
   kind: HandoutKind;
   actorId: string;
   tags: string[];
   freeTags: string;
   name: string;
+  surface?: string;
+  secret?: string;
 }
 
 export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -579,6 +581,12 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       result.kind === "pc" ? { kind: "actor", actorId: result.actorId } : { kind: "gm" };
     const api = game.modules.get(MODULE_ID)?.api;
     await api?.updateHandoutMeta(id, { owner, kind: result.kind, tags, name: result.name });
+    // 인라인 편집된 본문만(정의된 키만) HTML 로 변환해 저장. 둘 다 없으면 호출 생략.
+    const body: { surface?: string; secret?: string } = {};
+    if (result.surface !== undefined) body.surface = bodyToHtml(result.surface);
+    if (result.secret !== undefined) body.secret = bodyToHtml(result.secret);
+    if (body.surface !== undefined || body.secret !== undefined)
+      await api?.updateHandoutBody(id, body);
     log.info("updateHandoutMeta requested", id, owner, tags);
     void this.render();
   }
@@ -628,6 +636,14 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const showActor = currentKind === "pc" && hasPc;
     const actorRowStyle = showActor ? "" : "display:none";
 
+    const surfaceContent = doc.surfacePage?.text?.content ?? "";
+    const secretContent = doc.secretPage?.text?.content ?? "";
+    // 평문이면 textarea(현재값 prefill), 리치(<br> 외 태그)면 잠금 안내 → "시트 열기" 유도.
+    const bodyField = (label: string, name: string, content: string): string =>
+      isInlineEditable(content)
+        ? `<div class="shp-field"><div class="shp-field__label">${label}</div><textarea class="shp-textarea" name="${name}" rows="4">${escapeHtml(htmlToBody(content))}</textarea></div>`
+        : `<div class="shp-field"><div class="shp-field__label">${label}</div><div class="shp-locked-note">서식이 있는 본문입니다. '시트 열기'에서 편집하세요.</div></div>`;
+
     const content = `
       <div class="shp-dialog-body">
         <div class="shp-field"><div class="shp-field__label">이름</div><input class="shp-input" type="text" name="title" value="${escapeHtml(doc.entry.name ?? "")}"></div>
@@ -642,6 +658,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           <div class="shp-field__label">소유자 액터</div>
           <select class="shp-select" name="actorId">${buildActorOptions(pcs, currentActorId)}</select>
         </div>
+        ${bodyField("표면", "surface", surfaceContent)}
+        ${bodyField("비밀", "secret", secretContent)}
         <div class="shp-field"><div class="shp-field__label">태그</div><div class="shp-checklist shp-checklist--wrap">${buildTagChecks(dict, selectedTags)}</div></div>
         <div class="shp-field"><div class="shp-field__label">추가 태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="freeTags" value="${escapeHtml(freeTagsValue)}"></div>
       </div>`;
@@ -682,7 +700,18 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             ).map((o) => o.value);
             const freeTags = el.querySelector<HTMLInputElement>('input[name="freeTags"]')?.value ?? "";
             const name = el.querySelector<HTMLInputElement>('input[name="title"]')?.value ?? "";
-            const out: EditFormResult = { kind, actorId, tags, freeTags, name };
+            // textarea 가 있으면(=평문이라 인라인 편집 허용) 값 수집, 없으면(리치) 키 자체를 빼서 변경하지 않음.
+            const surfaceEl = el.querySelector<HTMLTextAreaElement>('textarea[name="surface"]');
+            const secretEl = el.querySelector<HTMLTextAreaElement>('textarea[name="secret"]');
+            const out: EditFormResult = {
+              kind,
+              actorId,
+              tags,
+              freeTags,
+              name,
+              ...(surfaceEl ? { surface: surfaceEl.value } : {}),
+              ...(secretEl ? { secret: secretEl.value } : {}),
+            };
             return out;
           },
         },

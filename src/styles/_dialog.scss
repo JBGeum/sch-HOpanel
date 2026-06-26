@@ -145,4 +145,10 @@ $r: $shp-radius;
     &--danger  { background: var(--shp-danger-tx); color: #fff; border: 0; font-weight: 700; }
     &--danger-ghost { color: var(--shp-danger-tx); border-color: var(--shp-danger-border); }
   }
+
+  .shp-locked-note {
+    padding: 6px 0;
+    font-size: 0.85em;
+    opacity: 0.7;
+  }
 }
