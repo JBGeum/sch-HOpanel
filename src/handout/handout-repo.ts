@@ -13,6 +13,7 @@ import {
   type HandoutFlags,
   type HandoutKind,
 } from "./handout-flags";
+import { sortByOrder } from "./handout-order";
 
 /**
  * Resolves the non-GM User ids that hold OWNER-level permission on the given actor.
@@ -93,7 +94,7 @@ export function listHandoutDocs(): HandoutDoc[] {
     const doc = toDoc(entry);
     if (doc) out.push(doc);
   }
-  return out;
+  return sortByOrder(out, (d) => d.flags.order);
 }
 
 /**
@@ -235,4 +236,22 @@ export async function updateHandoutBodyDoc(
     await doc.surfacePage.update({ text: { content: body.surface } });
   if (body.secret !== undefined && doc.secretPage)
     await doc.secretPage.update({ text: { content: body.secret } });
+}
+
+/**
+ * 핸드아웃 순서(flags.order)만 배치 갱신한다. ownership/page/가시성과 무관 →
+ * applyFlagsUpdate 를 우회한다(ownership 맵을 건드리지 않으므로 불변식 위반 아님).
+ * 한 번의 updateDocuments 로 묶어 updateJournalEntry 훅 발화를 최소화한다(빈 배열 no-op).
+ * 캐스트: fvtt-types 의 updateDocuments 시그니처가 엄격해 국소 캐스트만 사용
+ * (전달 payload 는 표준 { _id, flags } 부분 업데이트라 런타임상 안전).
+ */
+export async function reorderHandoutDocs(
+  updates: { id: string; order: number }[],
+): Promise<void> {
+  if (updates.length === 0) return;
+  const data = updates.map((u) => ({
+    _id: u.id,
+    flags: { [FLAG_SCOPE]: { order: u.order } },
+  }));
+  await (JournalEntry.updateDocuments as (docs: object[]) => Promise<unknown>)(data);
 }

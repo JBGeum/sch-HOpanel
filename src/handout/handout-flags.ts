@@ -7,6 +7,7 @@ export interface HandoutFlags {
   owner: Owner;
   kind: HandoutKind;
   tags: string[];
+  order?: number;
   revealState: RevealState;
 }
 
@@ -40,6 +41,7 @@ export function readHandoutFlags(entry: JournalEntry): HandoutFlags | null {
     owner: owner as Owner,
     kind: entry.getFlag(FLAG_SCOPE, "kind") as HandoutKind,
     tags: (entry.getFlag(FLAG_SCOPE, "tags") as string[] | undefined) ?? [],
+    order: entry.getFlag(FLAG_SCOPE, "order") as number | undefined,
     revealState: entry.getFlag(FLAG_SCOPE, "revealState") as RevealState,
   };
 }
