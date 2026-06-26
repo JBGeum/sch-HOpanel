@@ -6,6 +6,7 @@ import {
   deleteHandoutDoc,
   getHandoutDoc,
   listHandoutDocs,
+  updateHandoutBodyDoc,
   type HandoutDoc,
 } from "../handout/handout-repo";
 import type { Owner, RevealState, SecretMode, SurfaceMode } from "../handout/reveal-state";
@@ -35,6 +36,7 @@ export interface HandoutApi {
     id: string,
     meta: { owner: Owner; kind: HandoutKind; tags: string[]; name: string },
   ): Promise<void>;
+  updateHandoutBody(id: string, body: { surface?: string; secret?: string }): Promise<void>;
   setSurfaceVisibility(
     id: string,
     surface: { mode: SurfaceMode; revealedTo: string[] },
@@ -128,6 +130,13 @@ export function buildApi(): HandoutApi {
       await applyFlagsUpdate(doc, flags);
       const nextName = name.trim() || (meta.kind === "pc" ? "PC 핸드아웃" : "공용 핸드아웃");
       if (nextName !== doc.entry.name) await doc.entry.update({ name: nextName });
+    },
+
+    async updateHandoutBody(id, body) {
+      if (!game.user?.isGM) throw new Error("updateHandoutBody: GM only");
+      const doc = getHandoutDoc(id);
+      if (!doc) throw new Error(`updateHandoutBody: handout not found: ${id}`);
+      await updateHandoutBodyDoc(doc, body);
     },
 
     async setSurfaceVisibility(id, surface) {
