@@ -131,6 +131,12 @@ $r: $shp-radius;
     padding: 9px 11px;
     display: flow-root;                       // 저널 본문의 float(이미지 등)도 박스 안에 포함
     img { max-width: 100%; height: auto; }    // 박스 폭을 넘는 이미지를 제한
+    // 저널 본문 요소를 박스 안에서 일관 표시(외부 CSS·브라우저 기본값 차이 차단)
+    p, figure, blockquote, ul, ol {
+      display: block; margin: 0 0 .6em;
+      &:last-child { margin-bottom: 0; }
+    }
+    figcaption { display: block; font-weight: 600; margin: 0 0 .25em; }
   }
   &__content--secret {
     background: var(--shp-secret-bg);
