@@ -2,7 +2,7 @@
   "id": "sch-handout-panel",
   "title": "SCH Handout Panel",
   "description": "Distribute TRPG handouts and manage secret permissions on top of Foundry JournalEntry.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
