@@ -31,16 +31,18 @@
     </div>
     <div class="shp-detail__content">{{{surfaceContent}}}</div>
 
-    <div class="shp-detail__head">
-      <span class="shp-detail__label">비밀</span>
-      <span class="shp-detail__spacer"></span>
-      <span class="shp-chip" data-area="secret" data-state="{{secretChip.state}}">{{secretChip.label}}</span>
+    <div class="shp-secretcard">
+      <div class="shp-detail__head">
+        <span class="shp-detail__label">비밀</span>
+        <span class="shp-detail__spacer"></span>
+        <span class="shp-chip" data-area="secret" data-state="{{secretChip.state}}">{{secretChip.label}}</span>
+      </div>
+      {{#if secretLocked}}
+        <div class="shp-detail__content shp-detail__content--locked"></div>
+      {{else}}
+        <div class="shp-detail__content shp-detail__content--secret">{{{secretContent}}}</div>
+      {{/if}}
     </div>
-    {{#if secretLocked}}
-      <div class="shp-detail__content shp-detail__content--locked"></div>
-    {{else}}
-      <div class="shp-detail__content shp-detail__content--secret">{{{secretContent}}}</div>
-    {{/if}}
 
     <div class="shp-actions">
       {{#if canManage}}<button class="shp-btn--reveal" data-action="reveal" data-handout-id="{{id}}" type="button">＋ 공개</button>{{/if}}

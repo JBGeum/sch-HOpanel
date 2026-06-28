@@ -50,3 +50,16 @@ $r: $shp-radius;
     }
   }
 }
+
+// 비밀 게시 카드 — 봉인 톤(헤더 포함 카드 전체). 카드 배경 위 글자는 card-* 사용.
+.shp-chatcard--secret {
+  background: var(--shp-secret-card-bg);
+  border-color: var(--shp-secret-card-border);
+  border-left-color: var(--shp-tone-violet-dot);
+  color: var(--shp-secret-card-tx);
+
+  .shp-chatcard__header { border-bottom-color: var(--shp-secret-card-border); }
+  .shp-chatcard__name  { color: var(--shp-secret-card-tx); }
+  .shp-chatcard__sub   { color: var(--shp-secret-card-sub); }
+  .shp-chatcard__label { color: var(--shp-secret-card-tx); }
+}

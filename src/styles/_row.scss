@@ -145,14 +145,26 @@ $r: $shp-radius;
     background:
       repeating-linear-gradient(135deg,
         var(--shp-secret-bg) 0 8px,
-        var(--shp-content-bg) 8px 16px);
+        var(--shp-secret-card-bg) 8px 16px);
     &::after {
       content: "🔒 비공개";
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: var(--shp-muted);
+      font-size: 11px; font-weight: 700; color: var(--shp-secret-sub);
     }
   }
+}
+
+// 비밀 카드 — 검은 봉인. 라벨 줄 + 내용을 한 카드로 수납한다.
+.shp-secretcard {
+  margin-top: 12px;
+  background: var(--shp-secret-card-bg);
+  border: 1px solid var(--shp-secret-card-border);
+  border-radius: map.get($r, card);
+  padding: 2px 11px 11px;
+
+  .shp-detail__head  { margin: 10px 0 7px; }
+  .shp-detail__label { color: var(--shp-secret-card-tx); }
 }
 
 // 가시성 세그먼트(전원/일부/숨김) -----------------------------

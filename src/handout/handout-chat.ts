@@ -22,7 +22,7 @@ export function buildChatCard(args: {
   const contentClass =
     args.area === "surface" ? "shp-chatcard__content" : "shp-chatcard__content shp-chatcard__content--secret";
   return (
-    `<div class="sch-handout-panel shp-chatcard" data-theme="${esc(args.theme)}">` +
+    `<div class="sch-handout-panel shp-chatcard shp-chatcard--${args.area}" data-theme="${esc(args.theme)}">` +
     `<div class="shp-chatcard__header">` +
     `<span class="shp-type" data-type="${esc(args.kind)}">${esc(args.typeLabel)}</span>` +
     `<span class="shp-chatcard__name">${esc(args.name)}</span>` +
