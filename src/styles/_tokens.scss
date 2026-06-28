@@ -133,7 +133,7 @@ $shp-theme-dark: (
 //  3) 상태 칩 팔레트 (가시성/공개 상태)
 //     각 톤은 (bg, fg, dot, bd) 4값. 테마별로 한 벌씩.
 //     의미 매핑:
-//       표면(surface): all=green / limited=amber / hidden=rose
+//       앞면(surface): all=green / limited=amber / hidden=rose
 //       비밀(secret):  owner=slate / limited=blue / all=violet
 // -------------------------------------------------------------
 $shp-tones-light: (

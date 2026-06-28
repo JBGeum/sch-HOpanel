@@ -18,7 +18,7 @@ export function buildChatCard(args: {
   body: string;
   theme: string;
 }): string {
-  const label = args.area === "surface" ? "표면" : "비밀";
+  const label = args.area === "surface" ? "앞면" : "비밀";
   const contentClass =
     args.area === "surface" ? "shp-chatcard__content" : "shp-chatcard__content shp-chatcard__content--secret";
   return (

@@ -106,7 +106,7 @@ function secretCanObserve(doc: HandoutDoc): boolean {
 /**
  * 현재 유저에게 "보이는" 핸드아웃 view 목록.
  * 패널 _prepareContext 와 반응성 핸들러가 공유하는 단일 가시성 출처.
- * 표면 hidden 이고 관리 불가면 카드 자체를 제외한다(비권한자 미표시).
+ * 앞면 hidden 이고 관리 불가면 카드 자체를 제외한다(비권한자 미표시).
  */
 export function listVisibleViews(): HandoutView[] {
   return listHandoutDocs()

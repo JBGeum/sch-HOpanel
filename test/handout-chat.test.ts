@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { buildChatCard } from "../src/handout/handout-chat";
 
 describe("buildChatCard", () => {
-  it("surface card → label 표면, non-secret content box, raw body", () => {
+  it("surface card → label 앞면, non-secret content box, raw body", () => {
     const html = buildChatCard({
       name: "마을 지도", typeLabel: "PC", kind: "pc", ownerName: "길동",
       area: "surface", body: "<p>지도</p>", theme: "light",
     });
-    expect(html).toContain("표면");
+    expect(html).toContain("앞면");
     expect(html).toContain('class="shp-chatcard__content"');
     expect(html).toContain("shp-chatcard__label--surface");
     expect(html).not.toContain("--secret");

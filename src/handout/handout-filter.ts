@@ -16,7 +16,7 @@ function norm(s: string): string {
 
 /**
  * 검색 매치 등급: 1 = 제목/소유자 매치(상단), 2 = 내용만 매치(하단), 0 = 미매치(제외).
- * 빈 query 는 항상 1(전원 통과). 내용 = 표면 + 읽을 수 있는 비밀(null 이면 제외 → 누출 없음).
+ * 빈 query 는 항상 1(전원 통과). 내용 = 앞면 + 읽을 수 있는 비밀(null 이면 제외 → 누출 없음).
  */
 export function searchTier(view: HandoutView, query: string): 0 | 1 | 2 {
   const q = norm(query);

@@ -1,5 +1,5 @@
 // =============================================================
-//  _dialog.scss — DialogV2 모달 (생성·편집·공개·표면일부·삭제)
+//  _dialog.scss — DialogV2 모달 (생성·편집·공개·앞면일부·삭제)
 //  네이티브 DialogV2 프레임 + 패널과 동일 토큰(var(--shp-*)).
 //  루트에 classes:["sch-handout-panel","shp-dialog"] + data-theme 가
 //  걸려 토큰이 해석된다(handout-panel.ts withDialogTheme).
@@ -113,7 +113,7 @@ $r: $shp-radius;
   .shp-check input:checked + .shp-check__box::after { content: "✓"; }
   .shp-check input:disabled + .shp-check__box { opacity: .55; }
 
-  // 체크 목록(공개/표면일부 = 세로 1열). 태그는 --wrap 으로 폭에 맞춰 줄바꿈.
+  // 체크 목록(공개/앞면일부 = 세로 1열). 태그는 --wrap 으로 폭에 맞춰 줄바꿈.
   .shp-checklist {
     display: flex; flex-direction: column; gap: 8px;
     &--wrap { flex-direction: row; flex-wrap: wrap; gap: 8px 14px; }

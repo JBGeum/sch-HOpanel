@@ -167,7 +167,7 @@ export async function createHandoutDoc(args: {
     ownership: ownership.entry,
     pages: [
       {
-        name: "표면",
+        name: "앞면",
         type: "text",
         text: { content: args.surface ?? "" },
         ownership: ownership.surface,

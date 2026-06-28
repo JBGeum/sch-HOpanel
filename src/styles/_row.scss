@@ -26,7 +26,7 @@ $r: $shp-radius;
 
   &--flash { animation: shp-row-flash 1.5s ease-out; }
 
-  // 행 머리(클릭 영역) — 소유자 | 표면 | 비밀 | caret
+  // 행 머리(클릭 영역) — 소유자 | 앞면 | 비밀 | caret
   &__head {
     display: grid;
     grid-template-columns: 1fr auto auto 16px;
@@ -88,12 +88,12 @@ $r: $shp-radius;
   &[data-type="floating"] { background: var(--shp-type-floating-bg); color: var(--shp-type-floating-fg); }
 }
 
-// 상태 칩 — 표면/비밀. data-area + data-state 로 톤 결정 --------
+// 상태 칩 — 앞면/비밀. data-area + data-state 로 톤 결정 --------
 //  JS:  chip.dataset.area="surface"; chip.dataset.state="all";
 .shp-chip {
   @include chip(slate);                 // 기본(폴백) 톤
 
-  // 표면(surface)
+  // 앞면(surface)
   &[data-area="surface"][data-state="all"]     { @include chip(green);  }
   &[data-area="surface"][data-state="limited"] { @include chip(amber);  }
   &[data-area="surface"][data-state="hidden"]  { @include chip(rose);   }
@@ -112,7 +112,7 @@ $r: $shp-radius;
 .shp-detail {
   padding: 2px 16px 15px;
 
-  &__head {                            // "표면" / "비밀" 라벨 줄
+  &__head {                            // "앞면" / "비밀" 라벨 줄
     display: flex; align-items: center; gap: 7px;
     margin: 12px 0 6px;
     &:first-child { margin-top: 0; }
