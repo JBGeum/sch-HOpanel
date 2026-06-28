@@ -6,7 +6,7 @@ export const MODULE_ID = "sch-handout-panel";
 /** flag 스코프 = 모듈 ID. JournalEntry/Page 의 flags[FLAG_SCOPE] 에 데이터를 둔다. */
 export const FLAG_SCOPE = MODULE_ID;
 
-/** page 가 표면/비밀 중 무엇인지: page.flags[FLAG_SCOPE].area 에 저장. */
+/** page 가 앞면/비밀 중 무엇인지: page.flags[FLAG_SCOPE].area 에 저장. */
 export const AREA = { surface: "surface", secret: "secret" } as const;
 export type Area = (typeof AREA)[keyof typeof AREA];
 

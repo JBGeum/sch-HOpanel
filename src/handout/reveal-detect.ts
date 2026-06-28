@@ -16,7 +16,7 @@ export function buildFingerprint(views: readonly FingerprintInput[]): Map<string
 
 /**
  * 직전 지문 대비 "새로 공개된" 핸드아웃 id를 검출한다.
- * - 표면 신규: next 에만 있는 id(생성/숨김해제/대상포함으로 새로 보임).
+ * - 앞면 신규: next 에만 있는 id(생성/숨김해제/대상포함으로 새로 보임).
  * - 비밀 잠금해제: 양쪽에 있고 prev.secretLocked === true && next.secretLocked === false.
  * 회수(false→true)·사라짐(next 없음)은 공개가 아니므로 제외.
  */

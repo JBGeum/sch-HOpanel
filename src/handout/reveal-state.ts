@@ -74,7 +74,7 @@ export function computeOwnership(input: ComputeInput): {
   const resolveRevealed = (actorIds: string[]): string[] =>
     unique(actorIds.flatMap((id) => resolveActorOwners(id)));
 
-  // 표면
+  // 앞면
   const s = revealState.surface;
   const surface: OwnershipMap =
     s.mode === "all"

@@ -597,7 +597,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           <div class="shp-field__label">소유자 액터</div>
           <select class="shp-select" name="actorId">${actorOptions}</select>
         </div>
-        <div class="shp-field"><div class="shp-field__label">표면</div><textarea class="shp-textarea" name="surface" rows="3"></textarea></div>
+        <div class="shp-field"><div class="shp-field__label">앞면</div><textarea class="shp-textarea" name="surface" rows="3"></textarea></div>
         <div class="shp-field"><div class="shp-field__label">비밀</div><textarea class="shp-textarea" name="secret" rows="3"></textarea></div>
         <div class="shp-field"><div class="shp-field__label">태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="tags"></div>
       </div>`;
@@ -677,7 +677,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * 표면 가시성 세그먼트(GM 전용 액션). 현재 mode 재클릭은 no-op.
+   * 앞면 가시성 세그먼트(GM 전용 액션). 현재 mode 재클릭은 no-op.
    * all/hidden 은 즉시 적용(가역이라 확인 다이얼로그 없음, revealedTo 보존).
    * limited 는 대상 액터 다이얼로그를 거쳐 선택 명단으로 교체(replace, 빈 선택도 유효).
    */
@@ -703,7 +703,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * 편집 폼 다이얼로그(DialogV2.wait). 생성 다이얼로그와 동일 구조이되 본문(표면/비밀) 없음 +
+   * 편집 폼 다이얼로그(DialogV2.wait). 생성 다이얼로그와 동일 구조이되 본문(앞면/비밀) 없음 +
    * 현재값 prefill: kind 라디오 체크, actorId select 선택, 태그는 자유 입력(쉼표 구분)으로 prefill.
    * 0-액터 처리(pc 비활성·기본 떠도는)·동적 토글·escapeHtml 은 생성과 동일.
    */
@@ -743,7 +743,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           <div class="shp-field__label">소유자 액터</div>
           <select class="shp-select" name="actorId">${buildActorOptions(pcs, currentActorId)}</select>
         </div>
-        ${bodyField("표면", "surface", surfaceContent)}
+        ${bodyField("앞면", "surface", surfaceContent)}
         ${bodyField("비밀", "secret", secretContent)}
         <div class="shp-field"><div class="shp-field__label">태그<em>(쉼표 구분)</em></div><input class="shp-input" type="text" name="tags" value="${escapeHtml(tagsValue)}"></div>
       </div>`;
@@ -804,7 +804,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * 표면 limited 대상 선택 다이얼로그. _openRevealDialog 와 동형이되 교체(replace) 의미론:
+   * 앞면 limited 대상 선택 다이얼로그. _openRevealDialog 와 동형이되 교체(replace) 의미론:
    * 현재 revealedTo 는 checked 로 prefill 하되 disabled 아님(해제 가능). 빈 선택도 유효(일부 0).
    * 반환: 선택된 actorId[](교체 대상 전체, 빈 배열 포함) | null(취소/dismiss).
    */
@@ -817,10 +817,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       })
       .join("");
 
-    const content = `<div class="shp-dialog-body"><p>표면을 볼 대상을 선택하세요.</p><div class="shp-checklist">${checks}</div></div>`;
+    const content = `<div class="shp-dialog-body"><p>앞면을 볼 대상을 선택하세요.</p><div class="shp-checklist">${checks}</div></div>`;
 
     const selected = await DialogV2.wait(withDialogTheme({
-      window: { title: "표면 가시성 — 일부" },
+      window: { title: "앞면 가시성 — 일부" },
       content,
       rejectClose: false,
       buttons: [

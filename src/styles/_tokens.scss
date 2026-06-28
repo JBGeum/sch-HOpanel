@@ -74,9 +74,16 @@ $shp-theme-light: (
   content-bg:     #ffffff,
   content-border: #ece9e3,
   content-tx:     #6b665e,
-  secret-bg:      #fbf6ee,
-  secret-border:  #e3d9c4,
-  secret-tx:      #46423b,
+  // 비밀 카드 = 검은 봉인(라이트). 내용 박스(secret-bg)는 카드와 반대 톤(흰).
+  // card-* = 카드 배경 위 글자(라벨/헤더), 그 외 = 내용 박스 위 글자.
+  secret-card-bg:     #16141c,
+  secret-card-border: #2e2a39,
+  secret-card-tx:     #e9e6f2,
+  secret-card-sub:    #a8a3b8,
+  secret-bg:          #ffffff,
+  secret-border:      #d8d4cc,
+  secret-tx:          #46423b,
+  secret-sub:         #908a80,
   primary:        #4a5bd0,
   danger-tx:      #a23b34,
   danger-border:  #eccbc6,
@@ -119,9 +126,15 @@ $shp-theme-dark: (
   content-bg:     #15161c,
   content-border: #2e3038,
   content-tx:     #b6bac2,
-  secret-bg:      #262017,
-  secret-border:  #4a3d24,
-  secret-tx:      #d9cdb6,
+  // 비밀 카드 = 밝은 봉인(다크, 전체 톤 밝게). 내용 박스는 카드와 반대 톤(검은톤).
+  secret-card-bg:     #d4d1dc,
+  secret-card-border: #bdb9c9,
+  secret-card-tx:     #2a2733,
+  secret-card-sub:    #6b6878,
+  secret-bg:          #16141c,
+  secret-border:      #3a3547,
+  secret-tx:          #e9e6f2,
+  secret-sub:         #a8a3b8,
   primary:        #5e6fe0,
   danger-tx:      #e08a82,
   danger-border:  #533029,
@@ -133,7 +146,7 @@ $shp-theme-dark: (
 //  3) 상태 칩 팔레트 (가시성/공개 상태)
 //     각 톤은 (bg, fg, dot, bd) 4값. 테마별로 한 벌씩.
 //     의미 매핑:
-//       표면(surface): all=green / limited=amber / hidden=rose
+//       앞면(surface): all=green / limited=amber / hidden=rose
 //       비밀(secret):  owner=slate / limited=blue / all=violet
 // -------------------------------------------------------------
 $shp-tones-light: (

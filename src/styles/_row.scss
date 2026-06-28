@@ -26,7 +26,7 @@ $r: $shp-radius;
 
   &--flash { animation: shp-row-flash 1.5s ease-out; }
 
-  // 행 머리(클릭 영역) — 소유자 | 표면 | 비밀 | caret
+  // 행 머리(클릭 영역) — 소유자 | 앞면 | 비밀 | caret
   &__head {
     display: grid;
     grid-template-columns: 1fr auto auto 16px;
@@ -88,12 +88,12 @@ $r: $shp-radius;
   &[data-type="floating"] { background: var(--shp-type-floating-bg); color: var(--shp-type-floating-fg); }
 }
 
-// 상태 칩 — 표면/비밀. data-area + data-state 로 톤 결정 --------
+// 상태 칩 — 앞면/비밀. data-area + data-state 로 톤 결정 --------
 //  JS:  chip.dataset.area="surface"; chip.dataset.state="all";
 .shp-chip {
   @include chip(slate);                 // 기본(폴백) 톤
 
-  // 표면(surface)
+  // 앞면(surface)
   &[data-area="surface"][data-state="all"]     { @include chip(green);  }
   &[data-area="surface"][data-state="limited"] { @include chip(amber);  }
   &[data-area="surface"][data-state="hidden"]  { @include chip(rose);   }
@@ -112,7 +112,7 @@ $r: $shp-radius;
 .shp-detail {
   padding: 2px 16px 15px;
 
-  &__head {                            // "표면" / "비밀" 라벨 줄
+  &__head {                            // "앞면" / "비밀" 라벨 줄
     display: flex; align-items: center; gap: 7px;
     margin: 12px 0 6px;
     &:first-child { margin-top: 0; }
@@ -129,6 +129,8 @@ $r: $shp-radius;
     color: var(--shp-content-tx);
     border-radius: map.get($r, input);
     padding: 9px 11px;
+    display: flow-root;                       // 저널 본문의 float(이미지 등)도 박스 안에 포함
+    img { max-width: 100%; height: auto; }    // 박스 폭을 넘는 이미지를 제한
   }
   &__content--secret {
     background: var(--shp-secret-bg);
@@ -145,14 +147,26 @@ $r: $shp-radius;
     background:
       repeating-linear-gradient(135deg,
         var(--shp-secret-bg) 0 8px,
-        var(--shp-content-bg) 8px 16px);
+        var(--shp-secret-card-bg) 8px 16px);
     &::after {
       content: "🔒 비공개";
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: var(--shp-muted);
+      font-size: 11px; font-weight: 700; color: var(--shp-secret-sub);
     }
   }
+}
+
+// 비밀 카드 — 검은 봉인. 라벨 줄 + 내용을 한 카드로 수납한다.
+.shp-secretcard {
+  margin-top: 12px;
+  background: var(--shp-secret-card-bg);
+  border: 1px solid var(--shp-secret-card-border);
+  border-radius: map.get($r, card);
+  padding: 2px 11px 11px;
+
+  .shp-detail__head  { margin: 10px 0 7px; }
+  .shp-detail__label { color: var(--shp-secret-card-tx); }
 }
 
 // 가시성 세그먼트(전원/일부/숨김) -----------------------------

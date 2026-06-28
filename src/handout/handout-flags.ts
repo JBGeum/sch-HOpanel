@@ -13,7 +13,7 @@ export interface HandoutFlags {
 
 /**
  * createHandout 기본 공개상태(spec §3-3).
- * 표면은 hidden(GM·소유자만)으로 시작한다 — 생성 즉시 전원 공개되는 사고를 막기 위함.
+ * 앞면은 hidden(GM·소유자만)으로 시작한다 — 생성 즉시 전원 공개되는 사고를 막기 위함.
  * GM 이 명시적으로 limited/all 로 전환해야 다른 PC 에게 노출된다.
  */
 export const DEFAULT_REVEAL_STATE: RevealState = {

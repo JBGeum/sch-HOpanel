@@ -43,10 +43,43 @@ $r: $shp-radius;
     background: var(--shp-content-bg);
     border: 1px solid var(--shp-content-border);
     color: var(--shp-content-tx);
+    display: flow-root;                       // 저널 본문의 float(이미지 등)도 박스 안에 포함
+    img { max-width: 100%; height: auto; }    // 박스 폭을 넘는 이미지를 제한
     &--secret {
       background: var(--shp-secret-bg);
       border: 1px dashed var(--shp-secret-border);
       color: var(--shp-secret-tx);
     }
   }
+}
+
+// 비밀 게시 카드 — 봉인 톤(헤더 포함 카드 전체). 카드 배경 위 글자는 card-* 사용.
+.shp-chatcard--secret {
+  background: var(--shp-secret-card-bg);
+  border-color: var(--shp-secret-card-border);
+  border-left-color: var(--shp-tone-violet-dot);
+  color: var(--shp-secret-card-tx);
+
+  .shp-chatcard__header { border-bottom-color: var(--shp-secret-card-border); }
+  .shp-chatcard__name  { color: var(--shp-secret-card-tx); }
+  .shp-chatcard__sub   { color: var(--shp-secret-card-sub); }
+  .shp-chatcard__label { color: var(--shp-secret-card-tx); }
+}
+
+// =============================================================
+//  채팅 로그 통합 — 핸드아웃 카드가 든 메시지는 Foundry 기본 헤더
+//  (발신자·시간)를 숨기고 여백·배경을 없애 카드가 .chat-message
+//  전체를 채우게 한다. :has() 로 우리 카드가 있는 메시지에만 적용
+//  (다른 메시지는 무영향). 모듈 CSS 는 전역 로드라 동작한다.
+// =============================================================
+.chat-message.message:has(.shp-chatcard) {
+  padding: 0;
+  border: none;
+  background: none;
+
+  .message-header  { display: none; }
+  .message-content { margin: 0; padding: 0; }
+
+  // 카드가 메시지를 대표 — radius/accent 는 카드 자체 스타일을 그대로 쓴다.
+  .shp-chatcard { margin: 0; }
 }
