@@ -43,6 +43,8 @@ $r: $shp-radius;
     background: var(--shp-content-bg);
     border: 1px solid var(--shp-content-border);
     color: var(--shp-content-tx);
+    display: flow-root;                       // 저널 본문의 float(이미지 등)도 박스 안에 포함
+    img { max-width: 100%; height: auto; }    // 박스 폭을 넘는 이미지를 제한
     &--secret {
       background: var(--shp-secret-bg);
       border: 1px dashed var(--shp-secret-border);
