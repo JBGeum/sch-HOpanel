@@ -227,7 +227,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   ): Promise<void> {
     const theme = (getSetting(SETTINGS.theme) as string) ?? "light";
     this.element.dataset.theme = theme;
-    // 폰트 배율(%) → 본문 줌 변수. _panel.scss 의 .shp-panel { zoom: var(--shp-zoom) } 가 소비한다.
+    // 폰트 배율(%) → 본문 줌 변수. _panel.scss 의 .shp-panel { zoom: var(--shp-zoom, 1) } 가 소비한다.
     const fontScale = (getSetting(SETTINGS.fontScale) as number) ?? 100;
     this.element.style.setProperty("--shp-zoom", String(fontScale / 100));
     const search = this.element.querySelector<HTMLInputElement>('input[name="q"]');
