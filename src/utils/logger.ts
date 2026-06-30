@@ -14,8 +14,12 @@ function isDebugEnabled(): boolean {
 }
 
 export const log = {
-  info: (...args: unknown[]): void => console.log(PREFIX, ...args),
-  warn: (...args: unknown[]): void => console.warn(PREFIX, ...args),
+  info: (...args: unknown[]): void => {
+    if (isDebugEnabled()) console.log(PREFIX, ...args);
+  },
+  warn: (...args: unknown[]): void => {
+    if (isDebugEnabled()) console.warn(PREFIX, ...args);
+  },
   error: (...args: unknown[]): void => console.error(PREFIX, ...args),
   debug: (...args: unknown[]): void => {
     if (isDebugEnabled()) console.debug(PREFIX, ...args);
