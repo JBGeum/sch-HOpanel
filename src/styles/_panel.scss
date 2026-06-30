@@ -69,6 +69,8 @@ $r: $shp-radius;
   background: var(--shp-panel);
   overflow: hidden;
   transition: background .2s;
+  // 패널 본문 전체를 폰트 배율로 줌(헤더/타이틀바 제외). 변수는 _onRender 가 루트에 stamp.
+  zoom: var(--shp-zoom, 1);
 }
 
 // 툴바(검색 + 생성) -------------------------------------------
