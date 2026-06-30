@@ -15,8 +15,10 @@ export const HANDOUT_FOLDER_NAME = "Handouts";
 
 /** 설정 키. */
 export const SETTINGS = {
-  /** client: 패널 테마("light"|"dark") */
+  /** client: 패널 테마("light"|"dark"|"auto") */
   theme: "theme",
+  /** client: 패널 본문 줌 배율(%), 80~200, 기본 100 */
+  fontScale: "fontScale",
   /** client: 개발용 디버그 로그 토글 */
   debugMode: "debugMode",
 } as const;

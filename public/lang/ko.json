@@ -1,6 +1,11 @@
 {
   "SCH.Settings.Theme.Name": "패널 테마",
   "SCH.Settings.Theme.Hint": "핸드아웃 패널의 라이트/다크 테마입니다 (클라이언트별).",
+  "SCH.Settings.Theme.Light": "라이트",
+  "SCH.Settings.Theme.Dark": "다크",
+  "SCH.Settings.Theme.Auto": "자동 (시스템 설정)",
+  "SCH.Settings.FontScale.Name": "패널 글자 크기",
+  "SCH.Settings.FontScale.Hint": "패널 본문을 확대/축소합니다 (80~200%, 클라이언트별).",
   "SCH.Settings.DebugMode.Name": "디버그 모드",
   "SCH.Settings.DebugMode.Hint": "콘솔에 상세 디버그 로그를 출력합니다 (클라이언트별).",
   "SCH.Panel.Title": "핸드아웃 패널",

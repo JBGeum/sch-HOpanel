@@ -1,6 +1,11 @@
 {
   "SCH.Settings.Theme.Name": "Panel Theme",
   "SCH.Settings.Theme.Hint": "Light/dark theme for the handout panel (per client).",
+  "SCH.Settings.Theme.Light": "Light",
+  "SCH.Settings.Theme.Dark": "Dark",
+  "SCH.Settings.Theme.Auto": "Auto (system)",
+  "SCH.Settings.FontScale.Name": "Panel Font Size",
+  "SCH.Settings.FontScale.Hint": "Scale the panel body (80–200%, per client).",
   "SCH.Settings.DebugMode.Name": "Debug Mode",
   "SCH.Settings.DebugMode.Hint": "Print verbose debug logs to the console (per client).",
   "SCH.Panel.Title": "Handout Panel",
