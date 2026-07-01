@@ -120,6 +120,8 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   #focusScrollId: string | null = null;
   /** 다음 렌더에서 .shp-row--flash 를 줄 핸드아웃 id 집합(일회성). */
   #focusFlash = new Set<string>();
+  /** 리사이즈 너비 저장 디바운스 타이머. 드래그 프레임마다 setSetting 하지 않도록 마지막 너비만 1회 기록. */
+  #widthSaveTimer: number | null = null;
 
   static override DEFAULT_OPTIONS: foundry.applications.api.ApplicationV2.DefaultOptions = {
     id: "sch-handout-panel",
@@ -416,7 +418,34 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     position: foundry.applications.api.ApplicationV2.Position,
   ): foundry.applications.api.ApplicationV2.Position {
     position.height = "auto";
-    return super._updatePosition(position);
+    const resolved = super._updatePosition(position);
+    // 리사이즈로 확정된(클램프된) 너비를 200ms 디바운스로 저장. 타이머 fire 시점에 저장값과
+    // 비교해 실제 변화가 있을 때만 setSetting → 렌더/드래그/복원의 중간 호출로 인한 잉여 write 방지.
+    if (typeof resolved.width === "number") {
+      const width = resolved.width;
+      if (this.#widthSaveTimer !== null) clearTimeout(this.#widthSaveTimer);
+      this.#widthSaveTimer = window.setTimeout(() => {
+        this.#widthSaveTimer = null;
+        if (width !== ((getSetting(SETTINGS.panelWidth) as number) ?? 520)) {
+          void setSetting(SETTINGS.panelWidth, width);
+        }
+      }, 200);
+    }
+    return resolved;
+  }
+
+  /**
+   * 첫 렌더에서 저장된 패널 너비를 복원한다. setPosition → _updatePosition 이 min-width 로 클램프한다.
+   * 세션 내 재오픈은 인스턴스가 #position 을 유지하므로 불필요하고(base 는 재오픈 시 position 을
+   * 리셋하지 않음), 새로고침·재접속으로 만들어진 새 인스턴스에서만 이 경로로 복원된다.
+   */
+  protected override async _onFirstRender(
+    context: foundry.applications.api.ApplicationV2.RenderContext,
+    options: foundry.applications.api.ApplicationV2.RenderOptions,
+  ): Promise<void> {
+    await super._onFirstRender(context, options);
+    const saved = (getSetting(SETTINGS.panelWidth) as number) ?? 520;
+    if (saved > 0) this.setPosition({ width: saved });
   }
 
   /** Used as action handler for "toggle-theme". Protected prefix so it's accessible from DEFAULT_OPTIONS. */

@@ -19,6 +19,8 @@ export const SETTINGS = {
   theme: "theme",
   /** client: 패널 본문 줌 배율(%), 80~200, 기본 100 */
   fontScale: "fontScale",
+  /** client: 리사이즈로 조정된 패널 너비(px). 내부 상태(config:false), 기본 520 */
+  panelWidth: "panelWidth",
   /** client: 개발용 디버그 로그 토글 */
   debugMode: "debugMode",
 } as const;

@@ -33,6 +33,14 @@ export function registerSettings(): void {
     onChange: rerenderPanel,
   });
 
+  // 리사이즈된 패널 너비의 내부 저장소. config:false 로 설정 메뉴에 노출하지 않는다.
+  game.settings.register(MODULE_ID, SETTINGS.panelWidth, {
+    scope: "client",
+    config: false,
+    type: Number,
+    default: 520,
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.debugMode, {
     name: "SCH.Settings.DebugMode.Name",
     hint: "SCH.Settings.DebugMode.Hint",
