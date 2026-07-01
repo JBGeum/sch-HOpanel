@@ -27,6 +27,9 @@ export const SETTINGS = {
 
 export type SettingKey = (typeof SETTINGS)[keyof typeof SETTINGS];
 
+/** 패널 기본 너비(px). panelWidth 설정 default 와 미저장 시 폴백의 단일 출처(세 곳이 항상 일치). */
+export const DEFAULT_PANEL_WIDTH = 520;
+
 /** 훅 이름 prefix(P2 에서 사용, P0 은 선언만). */
 export const HOOKS = {
   reveal: "schHandoutPanel.reveal",

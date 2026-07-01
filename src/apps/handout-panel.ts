@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS } from "../constants";
+import { MODULE_ID, SETTINGS, DEFAULT_PANEL_WIDTH } from "../constants";
 import { getSetting, setSetting } from "../settings";
 import { getHandoutDoc, listHandoutDocs, type HandoutDoc } from "../handout/handout-repo";
 import { listVisibleViews, type HandoutView } from "../handout/handout-view";
@@ -426,7 +426,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (this.#widthSaveTimer !== null) clearTimeout(this.#widthSaveTimer);
       this.#widthSaveTimer = window.setTimeout(() => {
         this.#widthSaveTimer = null;
-        if (width !== ((getSetting(SETTINGS.panelWidth) as number) ?? 520)) {
+        if (width !== ((getSetting(SETTINGS.panelWidth) as number) ?? DEFAULT_PANEL_WIDTH)) {
           void setSetting(SETTINGS.panelWidth, width);
         }
       }, 200);
@@ -444,7 +444,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     options: foundry.applications.api.ApplicationV2.RenderOptions,
   ): Promise<void> {
     await super._onFirstRender(context, options);
-    const saved = (getSetting(SETTINGS.panelWidth) as number) ?? 520;
+    const saved = (getSetting(SETTINGS.panelWidth) as number) ?? DEFAULT_PANEL_WIDTH;
     if (saved > 0) this.setPosition({ width: saved });
   }
 

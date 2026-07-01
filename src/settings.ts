@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS, type SettingKey } from "./constants";
+import { MODULE_ID, SETTINGS, DEFAULT_PANEL_WIDTH, type SettingKey } from "./constants";
 
 /** theme/fontScale 변경 시 열려 있는 패널을 즉시 재렌더해 반영한다. */
 function rerenderPanel(): void {
@@ -38,7 +38,7 @@ export function registerSettings(): void {
     scope: "client",
     config: false,
     type: Number,
-    default: 520,
+    default: DEFAULT_PANEL_WIDTH,
   });
 
   game.settings.register(MODULE_ID, SETTINGS.debugMode, {
