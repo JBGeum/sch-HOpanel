@@ -125,7 +125,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     id: "sch-handout-panel",
     classes: ["sch-handout-panel"],
     tag: "div",
-    window: { title: "SCH.Panel.Title", icon: "fa-solid fa-scroll" },
+    window: { title: "SCH.Panel.Title", icon: "fa-solid fa-scroll", resizable: true },
     position: { width: 520, height: "auto" as const },
     actions: {
       "toggle-theme": HandoutPanel._onToggleTheme,
@@ -402,6 +402,21 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     super._onClose(options);
     const controls = ui.controls;
     if (controls?.control?.name === MODULE_ID) void controls.activate({ control: "tokens" });
+  }
+
+  /**
+   * 세로 리사이즈를 막고 높이를 항상 내용 기반(auto)으로 유지한다.
+   * .shp-panel 에 걸린 zoom(fontScale)은 세로 flex-fill(높이 100%)과 충돌하므로,
+   * 창을 세로로 늘려 본문을 채우는 방식이 성립하지 않는다. base 는 코너 리사이즈 시
+   * width·height 를 모두 숫자로 넘기므로, 여기서 height 를 "auto" 로 되돌려 가로 전용으로 만든다.
+   * (아코디언 펼침/내용 변화 시 높이는 여전히 auto 로 자동 확장된다.)
+   * 최소 너비는 super._updatePosition 이 CSS min-width 를 읽어 클램프하므로 width 는 건드리지 않는다.
+   */
+  protected override _updatePosition(
+    position: foundry.applications.api.ApplicationV2.Position,
+  ): foundry.applications.api.ApplicationV2.Position {
+    position.height = "auto";
+    return super._updatePosition(position);
   }
 
   /** Used as action handler for "toggle-theme". Protected prefix so it's accessible from DEFAULT_OPTIONS. */
