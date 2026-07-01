@@ -724,9 +724,10 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * 앞면 가시성 세그먼트(GM 전용 액션). 현재 mode 재클릭은 no-op.
-   * all/hidden 은 즉시 적용(가역이라 확인 다이얼로그 없음, revealedTo 보존).
-   * limited 는 대상 액터 다이얼로그를 거쳐 선택 명단으로 교체(replace, 빈 선택도 유효).
+   * 앞면 가시성 세그먼트(GM 전용 액션).
+   * limited 는 (이미 limited 여도) 대상 편집 다이얼로그를 연다 — 부분→부분 재편집 진입점.
+   *   현재 대상을 prefill(checked)하고 선택 명단으로 교체(replace, 빈 선택도 유효). 취소는 불변.
+   * all/hidden 은 현재 mode 재클릭만 no-op, 아니면 즉시 적용(가역, revealedTo 보존).
    */
   protected static async _onSurfaceVis(this: HandoutPanel, _event: PointerEvent, target: HTMLElement): Promise<void> {
     const id = target.dataset.handoutId;
@@ -735,14 +736,16 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const doc = getHandoutDoc(id);
     if (!doc) return;
     const cur = doc.flags.revealState.surface;
-    if (mode === cur.mode) return; // 현재 상태 재클릭 → no-op
     const api = game.modules.get(MODULE_ID)?.api;
     if (mode === "limited") {
+      // 이미 limited 여도 재클릭으로 대상 편집 다이얼로그를 다시 연다(부분→부분 진입점).
+      // 현재 대상은 prefill(checked)되고, 반환은 교체(replace) 의미론(빈 선택도 유효).
       const selected = await HandoutPanel._openSurfaceLimitDialog(cur.revealedTo);
-      if (selected === null) return; // 취소/dismiss
+      if (selected === null) return; // 취소/dismiss → 변경 없음
       await api?.setSurfaceVisibility(id, { mode: "limited", revealedTo: selected });
     } else {
-      // all | hidden — 즉시, 확인 없음, 기존 revealedTo 보존
+      // all | hidden — 현재 mode 재클릭만 no-op, 아니면 즉시 적용(기존 revealedTo 보존)
+      if (mode === cur.mode) return;
       await api?.setSurfaceVisibility(id, { mode, revealedTo: cur.revealedTo });
     }
     log.info("setSurfaceVisibility requested", id, mode);
