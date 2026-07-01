@@ -23,12 +23,14 @@ $r: $shp-radius;
     padding: 10px 13px;
     border-bottom: 1px solid var(--shp-border-soft);
   }
-  &__name { font-size: 14px; font-weight: 800; color: var(--shp-text); }
-  &__sub { font-size: 11px; font-weight: 600; color: var(--shp-count-tx); margin-left: auto; }
+  // 폰트 크기는 Foundry --font-size-N(=Npx/16 rem) 변수를 써서 클라이언트
+  // "글꼴 크기(Font Scale)" 설정(<html> 루트 font-size)에 함께 반응하게 한다.
+  &__name { font-size: var(--font-size-14); font-weight: 800; color: var(--shp-text); }
+  &__sub { font-size: var(--font-size-11); font-weight: 600; color: var(--shp-count-tx); margin-left: auto; }
 
   &__label {
     display: flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 800; letter-spacing: .03em;
+    font-size: var(--font-size-11); font-weight: 800; letter-spacing: .03em;
     color: var(--shp-detail-label);
     padding: 10px 13px 6px;
     &::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none; }
@@ -38,7 +40,7 @@ $r: $shp-radius;
 
   &__content {
     margin: 0 13px 13px;
-    font-size: 12.5px; line-height: 1.65;
+    font-size: var(--font-size-14); line-height: 1.65;   // 본문은 이름과 동일한 기본 글꼴 크기
     border-radius: 9px; padding: 9px 11px;
     background: var(--shp-content-bg);
     border: 1px solid var(--shp-content-border);
