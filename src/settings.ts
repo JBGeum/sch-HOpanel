@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS, type SettingKey } from "./constants";
+import { MODULE_ID, SETTINGS, DEFAULT_PANEL_WIDTH, type SettingKey } from "./constants";
 
 /** theme/fontScale 변경 시 열려 있는 패널을 즉시 재렌더해 반영한다. */
 function rerenderPanel(): void {
@@ -31,6 +31,14 @@ export function registerSettings(): void {
     range: { min: 80, max: 200, step: 5 },
     default: 100,
     onChange: rerenderPanel,
+  });
+
+  // 리사이즈된 패널 너비의 내부 저장소. config:false 로 설정 메뉴에 노출하지 않는다.
+  game.settings.register(MODULE_ID, SETTINGS.panelWidth, {
+    scope: "client",
+    config: false,
+    type: Number,
+    default: DEFAULT_PANEL_WIDTH,
   });
 
   game.settings.register(MODULE_ID, SETTINGS.debugMode, {

@@ -19,11 +19,16 @@ export const SETTINGS = {
   theme: "theme",
   /** client: 패널 본문 줌 배율(%), 80~200, 기본 100 */
   fontScale: "fontScale",
+  /** client: 리사이즈로 조정된 패널 너비(px). 내부 상태(config:false), 기본 520 */
+  panelWidth: "panelWidth",
   /** client: 개발용 디버그 로그 토글 */
   debugMode: "debugMode",
 } as const;
 
 export type SettingKey = (typeof SETTINGS)[keyof typeof SETTINGS];
+
+/** 패널 기본 너비(px). panelWidth 설정 default 와 미저장 시 폴백의 단일 출처(세 곳이 항상 일치). */
+export const DEFAULT_PANEL_WIDTH = 520;
 
 /** 훅 이름 prefix(P2 에서 사용, P0 은 선언만). */
 export const HOOKS = {

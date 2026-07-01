@@ -36,6 +36,7 @@ declare module "fvtt-types/configuration" {
   interface SettingConfig {
     "sch-handout-panel.theme": string;
     "sch-handout-panel.fontScale": number;
+    "sch-handout-panel.panelWidth": number;
     "sch-handout-panel.debugMode": boolean;
   }
 

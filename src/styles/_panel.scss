@@ -18,6 +18,10 @@ $r: $shp-radius;
 // 반드시 .application.sch-handout-panel 하위로 스코프하여 다른 Foundry 창에 영향을 주지 않는다.
 // v13 DOM: header.window-header > i.window-icon + h1.window-title + button.header-control(⚙) + button.header-control(✕)
 .application.sch-handout-panel {
+  // 가로 리사이즈 최소 너비. ApplicationV2._updatePosition 이 computedStyle.minWidth 를 읽어
+  // 리사이즈 시 이 값 미만으로 줄지 않도록 클램프한다(툴바/필터 칩 레이아웃 보호).
+  min-width: 380px;
+
   > .window-header {
     background: var(--shp-header-bg);
     border-bottom: 1px solid var(--shp-border);
