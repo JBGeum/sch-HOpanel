@@ -35,7 +35,6 @@ jobs:
             const m = JSON.parse(fs.readFileSync(path, 'utf8'));
             const base = 'https://github.com/' + process.env.REPO + '/releases/download/' + process.env.TAG;
             m.version = '${VERSION}';
-            m.manifest = base + '/module.json';
             m.download = base + '/module.zip';
             fs.writeFileSync(path, JSON.stringify(m, null, 2));
           "
