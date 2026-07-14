@@ -5,7 +5,7 @@
  */
 
 import { AREA, FLAG_SCOPE, HANDOUT_FOLDER_NAME } from "../constants";
-import { computeOwnership, mergeOwnershipMaps, type Owner, type RevealState } from "./reveal-state";
+import { computeOwnership, mergeOwnershipMaps, revealDependsOnActor, type Owner, type RevealState } from "./reveal-state";
 import {
   defaultFlags,
   isHandout,
@@ -254,4 +254,27 @@ export async function reorderHandoutDocs(
     flags: { [FLAG_SCOPE]: { order: u.order } },
   }));
   await (JournalEntry.updateDocuments as (docs: object[]) => Promise<unknown>)(flagUpdates);
+}
+
+/**
+ * 저장된 page ownership 이 stale 해졌을 때(예: 액터 ownership 변경), 현재 flags 로
+ * deriveOwnership 을 재계산해 entry·두 page 의 ownership 만 갱신한다(flags 는 불변).
+ * applyFlagsUpdate 에서 flags write 만 제거한 형태 — ownership 직접 편집 금지 불변식 유지.
+ */
+export async function reapplyOwnership(doc: HandoutDoc): Promise<void> {
+  const ownership = deriveOwnership(doc.flags);
+  await doc.entry.update({ ownership: ownership.entry });
+  if (doc.surfacePage) await doc.surfacePage.update({ ownership: ownership.surface });
+  if (doc.secretPage) await doc.secretPage.update({ ownership: ownership.secret });
+}
+
+/**
+ * 주어진 액터에 의존하는(소유자이거나 공개 대상) 모든 핸드아웃의 ownership 을 재파생한다.
+ * 플레이어가 나중에 그 액터에 OWNER 로 할당되면 저장된 page ownership 이 최신화돼 자동 노출된다.
+ */
+export async function reapplyOwnershipForActor(actorId: string): Promise<void> {
+  const affected = listHandoutDocs().filter((d) =>
+    revealDependsOnActor(d.flags.owner, d.flags.revealState, actorId),
+  );
+  for (const doc of affected) await reapplyOwnership(doc);
 }
