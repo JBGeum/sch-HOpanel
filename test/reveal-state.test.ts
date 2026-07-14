@@ -3,8 +3,11 @@ import {
   computeOwnership,
   computeRetractSecret,
   liveRevealed,
+  revealDependsOnActor,
   OWNERSHIP,
   type ComputeInput,
+  type Owner,
+  type RevealState,
 } from "../src/handout/reveal-state";
 
 // actor "A" 는 user u1; actor "B" 는 user u2,u3 (멀티오너)
@@ -214,5 +217,28 @@ describe("computeOwnership — edge cases", () => {
       }),
     );
     expect(secret.u1).toBe(OWNERSHIP.OWNER); // not downgraded to OBSERVER
+  });
+});
+
+describe("revealDependsOnActor", () => {
+  const owner: Owner = { kind: "actor", actorId: "A" };
+  const rs: RevealState = {
+    surface: { mode: "limited", revealedTo: ["S1"] },
+    secret: { mode: "limited", revealedTo: ["C1"] },
+  };
+  it("owner 액터면 true", () => {
+    expect(revealDependsOnActor(owner, rs, "A")).toBe(true);
+  });
+  it("surface.revealedTo 에 있으면 true", () => {
+    expect(revealDependsOnActor(owner, rs, "S1")).toBe(true);
+  });
+  it("secret.revealedTo 에 있으면 true", () => {
+    expect(revealDependsOnActor(owner, rs, "C1")).toBe(true);
+  });
+  it("어디에도 없으면 false", () => {
+    expect(revealDependsOnActor(owner, rs, "Z")).toBe(false);
+  });
+  it("gm owner(actorId 없음) + 무관 id → false", () => {
+    expect(revealDependsOnActor({ kind: "gm" }, rs, "Z")).toBe(false);
   });
 });

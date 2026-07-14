@@ -64,6 +64,23 @@ export function computeRetractSecret(
 }
 
 /**
+ * 이 owner·revealState 가 특정 actorId 에 의존하는지 판정한다(ownership 재파생 필요 여부).
+ * deriveOwnership 은 owner 와 surface/secret 의 revealedTo 를 모두 resolveActorOwners 로
+ * 계산하므로, 이 셋 중 하나라도 actorId 를 참조하면 그 액터의 ownership 변경 시 재파생이 필요하다.
+ */
+export function revealDependsOnActor(
+  owner: Owner,
+  revealState: RevealState,
+  actorId: string,
+): boolean {
+  return (
+    owner.actorId === actorId ||
+    revealState.surface.revealedTo.includes(actorId) ||
+    revealState.secret.revealedTo.includes(actorId)
+  );
+}
+
+/**
  * default + observer + owner 를 합성한 맵. owner 를 마지막에 써서
  * 동일 userId 가 OBSERVER 와 겹쳐도 OWNER 가 우선(상위 권한 유지)되게 한다.
  */
