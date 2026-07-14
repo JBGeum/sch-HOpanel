@@ -53,8 +53,8 @@ function withDialogTheme<C extends { classes?: string[]; render?: DialogRender |
 }
 
 /** 플레이어 소유 액터 목록 → <option> 문자열. selectedId 와 일치하는 option 에 selected. */
-function buildActorOptions(pcs: Actor[], selectedId?: string): string {
-  return pcs
+function buildActorOptions(actors: Actor[], selectedId?: string): string {
+  return actors
     .map((a) => {
       const id = a.id ?? "";
       const sel = selectedId !== undefined && id === selectedId ? " selected" : "";
@@ -538,9 +538,26 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!confirmed) return;
       await api?.retractSecret(id, []);
     } else if (secret.mode === "limited") {
-      const selected = await HandoutPanel._openRetractDialog(secret.revealedTo);
-      if (selected === null || selected.length === 0) return; // 취소/빈 선택
-      await api?.retractSecret(id, selected);
+      // 살아있는 공개 대상만 회수 후보로 삼는다. 삭제된 액터의 id 는 revealedTo 에 남아 있어도
+      // 후보에서 제외된다(retractSecret 이 실제 회수 시 함께 정리).
+      const live = secret.revealedTo.filter((a) => game.actors?.get(a));
+      if (live.length === 0) {
+        // 공개 대상 액터가 모두 삭제됨 → 회수할 후보가 없다. 빈 체크리스트 대신
+        // 비공개 전환 확인을 띄워 고착 상태를 정리할 수 있게 한다(신고된 버그 해소 경로).
+        const confirmed = await DialogV2.confirm(withDialogTheme({
+          window: { title: "비밀 회수" },
+          content: `<div class="shp-dialog-body shp-dialog-body--message">공개 대상 액터가 모두 삭제되어 남은 대상이 없습니다. 비공개로 전환합니다.</div>`,
+          yes: { label: "비공개로", class: "shp-dbtn shp-dbtn--danger" },
+          no: { label: "취소", class: "shp-dbtn" },
+          rejectClose: false,
+        }));
+        if (!confirmed) return;
+        await api?.retractSecret(id, secret.revealedTo); // 죽은 id 전부 제거 → owner
+      } else {
+        const selected = await HandoutPanel._openRetractDialog(live);
+        if (selected === null || selected.length === 0) return; // 취소/빈 선택
+        await api?.retractSecret(id, selected);
+      }
     } else {
       return; // owner — no-op
     }
@@ -621,14 +638,15 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
    * 항상 유효한 기본 상태이므로 폼 검증/재오픈이 불필요(리스크 §11 검증 단순화).
    */
   protected static async _openCreateDialog(): Promise<CreateFormResult | null> {
-    const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
-    const hasPc = pcs.length > 0;
+    // 소유자 후보 = 월드 전체 액터(플레이어 미확정 액터에도 미리 배정 가능). 시스템 비종속이라 타입 필터는 쓰지 않는다.
+    const actors = Array.from((game.actors ?? []) as Iterable<Actor>);
+    const hasActors = actors.length > 0;
 
-    const actorOptions = buildActorOptions(pcs);
+    const actorOptions = buildActorOptions(actors);
 
-    const pcAttrs = hasPc ? "checked" : "disabled";
-    const floatingAttrs = hasPc ? "" : "checked";
-    const actorRowStyle = hasPc ? "" : "display:none";
+    const pcAttrs = hasActors ? "checked" : "disabled";
+    const floatingAttrs = hasActors ? "" : "checked";
+    const actorRowStyle = hasActors ? "" : "display:none";
 
     const content = `
       <div class="shp-dialog-body">
@@ -758,17 +776,18 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
    * 0-액터 처리(pc 비활성·기본 떠도는)·동적 토글·escapeHtml 은 생성과 동일.
    */
   protected static async _openEditDialog(doc: HandoutDoc): Promise<EditFormResult | null> {
-    const pcs = Array.from((game.actors ?? []) as Iterable<Actor>).filter((a) => a.hasPlayerOwner);
-    const hasPc = pcs.length > 0;
+    // 소유자 후보 = 월드 전체 액터(플레이어 미확정 액터에도 배정 가능). 시스템 비종속이라 타입 필터는 쓰지 않는다.
+    const actors = Array.from((game.actors ?? []) as Iterable<Actor>);
+    const hasActors = actors.length > 0;
     const tagsValue = doc.flags.tags.join(", ");
     const currentKind = doc.flags.kind;
     const currentActorId = doc.flags.owner.actorId;
 
-    // prefill + 0-액터 처리: pc 는 hasPc 없으면 비활성, 현재 kind 에 따라 checked.
-    const pcDisabled = hasPc ? "" : " disabled";
-    const pcChecked = currentKind === "pc" && hasPc ? " checked" : "";
-    const floatingChecked = currentKind === "floating" || !hasPc ? " checked" : "";
-    const showActor = currentKind === "pc" && hasPc;
+    // prefill + 0-액터 처리: pc 는 액터가 하나도 없으면 비활성, 현재 kind 에 따라 checked.
+    const pcDisabled = hasActors ? "" : " disabled";
+    const pcChecked = currentKind === "pc" && hasActors ? " checked" : "";
+    const floatingChecked = currentKind === "floating" || !hasActors ? " checked" : "";
+    const showActor = currentKind === "pc" && hasActors;
     const actorRowStyle = showActor ? "" : "display:none";
 
     const surfaceContent = doc.surfacePage?.text?.content ?? "";
@@ -791,7 +810,7 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         </fieldset>
         <div class="shp-field sch-edit-actor" style="${actorRowStyle}">
           <div class="shp-field__label">소유자 액터</div>
-          <select class="shp-select" name="actorId">${buildActorOptions(pcs, currentActorId)}</select>
+          <select class="shp-select" name="actorId">${buildActorOptions(actors, currentActorId)}</select>
         </div>
         ${bodyField("앞면", "surface", surfaceContent)}
         ${bodyField("비밀", "secret", secretContent)}

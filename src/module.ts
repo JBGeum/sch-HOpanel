@@ -6,6 +6,7 @@ import { HandoutPanel } from "./apps/handout-panel";
 import { listVisibleViews, type HandoutView } from "./handout/handout-view";
 import { buildFingerprint, diffReveals } from "./handout/reveal-detect";
 import { isHandout } from "./handout/handout-flags";
+import { reapplyOwnershipForActor } from "./handout/handout-repo";
 import "./styles/main.scss";
 
 // 공개 API 타입은 src/foundry-config.d.ts 의 ModuleConfig 에 선언한다.
@@ -32,6 +33,10 @@ Hooks.once("ready", () => {
   Hooks.on("createJournalEntry", onJournalMaybeHandout);
   Hooks.on("deleteJournalEntry", onJournalMaybeHandout);
   Hooks.on("updateJournalEntryPage", onPageMaybeHandout);
+  // 액터 삭제 시 열린 패널을 재렌더한다(쓰기 없음). 삭제된 액터가 공개 대상이던 핸드아웃의
+  // 칩 카운트를 즉시 정직하게 갱신하기 위함 — 저장된 revealedTo 정리는 회수 액션이 담당한다.
+  Hooks.on("deleteActor", reactToHandoutChange);
+  Hooks.on("updateActor", onActorOwnershipChanged);
 });
 
 // Scene Controls 툴바에 패널 열기 버튼 등록 (V13: controls 는 Record<name, Control>).
@@ -117,6 +122,17 @@ function onJournalMaybeHandout(entry: JournalEntry): void {
 function onPageMaybeHandout(page: JournalEntryPage): void {
   const entry = page.parent;
   if (entry && isHandout(entry)) reactToHandoutChange();
+}
+
+// 액터 ownership 변경(예: 플레이어 OWNER 할당) 시, 그 액터에 의존하는 핸드아웃의 page ownership 을
+// GM 클라이언트에서 재파생한다. write 결과는 updateJournalEntry(Page) 훅으로 연쇄돼 각 클라이언트가
+// 재렌더/토스트한다(별도 배선 불필요). ownership 이 실제 바뀐 경우에만 반응(무관 편집 무시).
+function onActorOwnershipChanged(actor: Actor, change: Record<string, unknown>): void {
+  if (!game.user?.isGM) return;
+  if (change.ownership === undefined) return;
+  const id = actor.id;
+  if (!id) return;
+  void reapplyOwnershipForActor(id);
 }
 
 Hooks.on("getSceneControlButtons", (controls) => {

@@ -1,4 +1,4 @@
-import type { SecretMode, SurfaceMode } from "./reveal-state";
+import { liveRevealed, type SecretMode, type SurfaceMode } from "./reveal-state";
 import { canManage, listHandoutDocs, type HandoutDoc } from "./handout-repo";
 
 export interface Chip {
@@ -78,6 +78,12 @@ export function toHandoutView(doc: HandoutDoc): HandoutView | null {
   const manage = canManage(doc);
   const secretReadable = manage || secretCanObserve(doc);
 
+  // 칩 카운트는 살아있는 액터만 집계한다. 삭제된 액터의 id 가 revealedTo 에 남아도
+  // 실제 접근 권한은 없으므로(computeOwnership→resolveActorOwners→[]), 그대로 세면
+  // "여전히 공개됨"으로 오표시된다. secretRevealed(회수 버튼 게이트)는 mode 기준을 유지해
+  // 죽은 id 만 남은 고착 상태에서도 회수 버튼이 떠 정리할 수 있게 한다.
+  const isLive = (actorId: string): boolean => !!game.actors?.get(actorId);
+
   return {
     id: entry.id ?? "",
     name: entry.name ?? "",
@@ -85,8 +91,8 @@ export function toHandoutView(doc: HandoutDoc): HandoutView | null {
     typeLabel: flags.kind === "pc" ? "PC" : "공용",
     ownerName,
     tags: resolveTags(flags.tags),
-    surfaceChip: surfaceChip(rs.surface.mode, rs.surface.revealedTo.length),
-    secretChip: secretChip(rs.secret.mode, rs.secret.revealedTo.length),
+    surfaceChip: surfaceChip(rs.surface.mode, liveRevealed(rs.surface.revealedTo, isLive).length),
+    secretChip: secretChip(rs.secret.mode, liveRevealed(rs.secret.revealedTo, isLive).length),
     surfaceContent: surfacePage?.text?.content ?? "",
     secretContent: secretReadable ? secretPage?.text?.content ?? "" : null,
     secretLocked: !secretReadable,

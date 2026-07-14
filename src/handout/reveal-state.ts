@@ -34,6 +34,53 @@ function unique(ids: string[]): string[] {
 }
 
 /**
+ * revealedTo 중 실제로 존재하는(삭제되지 않은) actorId 만 남긴다(순서 보존).
+ * 삭제된 액터의 id 는 flag 에 남아도 실제 접근 권한이 없으므로(resolveActorOwners→[]),
+ * 칩 카운트·회수 후보 계산에서 제외해 "여전히 공개됨" 오표시와 회수 불가 고착을 막는다.
+ * isLive 는 Foundry 런타임에서 주입한다(game.actors 존재 여부).
+ */
+export function liveRevealed(revealedTo: string[], isLive: (actorId: string) => boolean): string[] {
+  return revealedTo.filter(isLive);
+}
+
+/**
+ * 비밀 회수 후 다음 secret 상태를 계산한다(순수).
+ * - all(전원공개) → owner(비공개)로 전체 회수.
+ * - limited → 회수 선택(targets)과 삭제된 액터(!isLive)를 모두 제거. 남은 대상이 없으면 owner 로 강등.
+ * - owner → 회수 대상 없음(그대로).
+ * 삭제된 actorId 를 항상 함께 제거하므로, 공개 대상이 모두 사라진 고착 상태(빈 회수 선택)도 owner 로 수렴한다.
+ */
+export function computeRetractSecret(
+  prev: RevealState["secret"],
+  targets: string[],
+  isLive: (actorId: string) => boolean,
+): RevealState["secret"] {
+  if (prev.mode === "all") return { mode: "owner", revealedTo: [] };
+  if (prev.mode !== "limited") return prev; // owner — 회수 대상 없음
+  const remaining = liveRevealed(prev.revealedTo, isLive).filter((a) => !targets.includes(a));
+  return remaining.length > 0
+    ? { mode: "limited", revealedTo: remaining }
+    : { mode: "owner", revealedTo: [] };
+}
+
+/**
+ * 이 owner·revealState 가 특정 actorId 에 의존하는지 판정한다(ownership 재파생 필요 여부).
+ * deriveOwnership 은 owner 와 surface/secret 의 revealedTo 를 모두 resolveActorOwners 로
+ * 계산하므로, 이 셋 중 하나라도 actorId 를 참조하면 그 액터의 ownership 변경 시 재파생이 필요하다.
+ */
+export function revealDependsOnActor(
+  owner: Owner,
+  revealState: RevealState,
+  actorId: string,
+): boolean {
+  return (
+    owner.actorId === actorId ||
+    revealState.surface.revealedTo.includes(actorId) ||
+    revealState.secret.revealedTo.includes(actorId)
+  );
+}
+
+/**
  * default + observer + owner 를 합성한 맵. owner 를 마지막에 써서
  * 동일 userId 가 OBSERVER 와 겹쳐도 OWNER 가 우선(상위 권한 유지)되게 한다.
  */
