@@ -32,6 +32,9 @@ Hooks.once("ready", () => {
   Hooks.on("createJournalEntry", onJournalMaybeHandout);
   Hooks.on("deleteJournalEntry", onJournalMaybeHandout);
   Hooks.on("updateJournalEntryPage", onPageMaybeHandout);
+  // 액터 삭제 시 열린 패널을 재렌더한다(쓰기 없음). 삭제된 액터가 공개 대상이던 핸드아웃의
+  // 칩 카운트를 즉시 정직하게 갱신하기 위함 — 저장된 revealedTo 정리는 회수 액션이 담당한다.
+  Hooks.on("deleteActor", reactToHandoutChange);
 });
 
 // Scene Controls 툴바에 패널 열기 버튼 등록 (V13: controls 는 Record<name, Control>).

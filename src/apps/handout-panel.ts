@@ -538,9 +538,26 @@ export class HandoutPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!confirmed) return;
       await api?.retractSecret(id, []);
     } else if (secret.mode === "limited") {
-      const selected = await HandoutPanel._openRetractDialog(secret.revealedTo);
-      if (selected === null || selected.length === 0) return; // 취소/빈 선택
-      await api?.retractSecret(id, selected);
+      // 살아있는 공개 대상만 회수 후보로 삼는다. 삭제된 액터의 id 는 revealedTo 에 남아 있어도
+      // 후보에서 제외된다(retractSecret 이 실제 회수 시 함께 정리).
+      const live = secret.revealedTo.filter((a) => game.actors?.get(a));
+      if (live.length === 0) {
+        // 공개 대상 액터가 모두 삭제됨 → 회수할 후보가 없다. 빈 체크리스트 대신
+        // 비공개 전환 확인을 띄워 고착 상태를 정리할 수 있게 한다(신고된 버그 해소 경로).
+        const confirmed = await DialogV2.confirm(withDialogTheme({
+          window: { title: "비밀 회수" },
+          content: `<div class="shp-dialog-body shp-dialog-body--message">공개 대상 액터가 모두 삭제되어 남은 대상이 없습니다. 비공개로 전환합니다.</div>`,
+          yes: { label: "비공개로", class: "shp-dbtn shp-dbtn--danger" },
+          no: { label: "취소", class: "shp-dbtn" },
+          rejectClose: false,
+        }));
+        if (!confirmed) return;
+        await api?.retractSecret(id, secret.revealedTo); // 죽은 id 전부 제거 → owner
+      } else {
+        const selected = await HandoutPanel._openRetractDialog(live);
+        if (selected === null || selected.length === 0) return; // 취소/빈 선택
+        await api?.retractSecret(id, selected);
+      }
     } else {
       return; // owner — no-op
     }

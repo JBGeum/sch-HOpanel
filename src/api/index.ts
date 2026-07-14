@@ -10,6 +10,7 @@ import {
   updateHandoutBodyDoc,
   type HandoutDoc,
 } from "../handout/handout-repo";
+import { computeRetractSecret } from "../handout/reveal-state";
 import type { Owner, RevealState, SecretMode, SurfaceMode } from "../handout/reveal-state";
 import type { HandoutKind } from "../handout/handout-flags";
 import { toHandoutView, type HandoutView } from "../handout/handout-view";
@@ -95,18 +96,11 @@ export function buildApi(): HandoutApi {
       const doc = getHandoutDoc(id);
       if (!doc) throw new Error(`retractSecret: handout not found: ${id}`);
 
+      // 회수 대상 + 삭제된 액터를 함께 제거하고, 남는 게 없으면 owner 로 강등(computeRetractSecret).
+      // 삭제된 액터가 revealedTo 에 잔존해 발생하던 회수 불가 고착도 이 경로로 정리된다.
       const prev = doc.flags.revealState.secret;
-      let next: RevealState["secret"];
-      if (prev.mode === "all") {
-        next = { mode: "owner", revealedTo: [] }; // 전체 회수
-      } else if (prev.mode === "limited") {
-        const remaining = prev.revealedTo.filter((a) => !targetActorIds.includes(a));
-        next = remaining.length
-          ? { mode: "limited", revealedTo: remaining }
-          : { mode: "owner", revealedTo: [] }; // 다 빠지면 비공개
-      } else {
-        return; // owner — 회수 대상 없음(no-op)
-      }
+      if (prev.mode === "owner") return; // 회수 대상 없음(no-op)
+      const next = computeRetractSecret(prev, targetActorIds, (actorId) => !!game.actors?.get(actorId));
       await applyRevealState(doc, { surface: doc.flags.revealState.surface, secret: next });
     },
 

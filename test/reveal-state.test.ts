@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { computeOwnership, OWNERSHIP, type ComputeInput } from "../src/handout/reveal-state";
+import {
+  computeOwnership,
+  computeRetractSecret,
+  liveRevealed,
+  OWNERSHIP,
+  type ComputeInput,
+} from "../src/handout/reveal-state";
 
 // actor "A" 는 user u1; actor "B" 는 user u2,u3 (멀티오너)
 const resolve = (actorId: string): string[] =>
@@ -118,6 +124,71 @@ describe("mergeOwnershipMaps", () => {
     const surface = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER };
     const secret = { default: OWNERSHIP.NONE, u1: OWNERSHIP.OBSERVER };
     expect(mergeOwnershipMaps(surface, secret)).toEqual({ default: OWNERSHIP.NONE, u1: OWNERSHIP.OWNER });
+  });
+});
+
+// 살아있는 액터: A, B, C. 그 외 id 는 삭제된 것으로 간주.
+const live = new Set(["A", "B", "C"]);
+const isLive = (id: string): boolean => live.has(id);
+
+describe("liveRevealed", () => {
+  it("전부 살아있으면 그대로 유지(순서 보존)", () => {
+    expect(liveRevealed(["A", "B"], isLive)).toEqual(["A", "B"]);
+  });
+  it("삭제된 id 는 제외", () => {
+    expect(liveRevealed(["A", "X", "B"], isLive)).toEqual(["A", "B"]);
+  });
+  it("전부 삭제되면 빈 배열", () => {
+    expect(liveRevealed(["X", "Y"], isLive)).toEqual([]);
+  });
+  it("빈 입력 → 빈 배열", () => {
+    expect(liveRevealed([], isLive)).toEqual([]);
+  });
+});
+
+describe("computeRetractSecret", () => {
+  it("all(전원공개) → owner(비공개)로 전체 회수", () => {
+    expect(computeRetractSecret({ mode: "all", revealedTo: [] }, [], isLive)).toEqual({
+      mode: "owner",
+      revealedTo: [],
+    });
+  });
+
+  it("owner → 회수 대상 없음(그대로)", () => {
+    const prev = { mode: "owner", revealedTo: [] } as const;
+    expect(computeRetractSecret(prev, ["A"], isLive)).toEqual(prev);
+  });
+
+  it("limited: 일부만 회수하면 나머지는 limited 유지", () => {
+    expect(
+      computeRetractSecret({ mode: "limited", revealedTo: ["A", "B"] }, ["A"], isLive),
+    ).toEqual({ mode: "limited", revealedTo: ["B"] });
+  });
+
+  it("limited: 살아있는 대상을 전부 회수하면 owner 로 강등", () => {
+    expect(
+      computeRetractSecret({ mode: "limited", revealedTo: ["A", "B"] }, ["A", "B"], isLive),
+    ).toEqual({ mode: "owner", revealedTo: [] });
+  });
+
+  it("limited: 삭제된 대상은 회수 선택 없이도 항상 함께 제거", () => {
+    // 살아있는 B 는 유지, 삭제된 X 는 자동 제거
+    expect(
+      computeRetractSecret({ mode: "limited", revealedTo: ["X", "B"] }, [], isLive),
+    ).toEqual({ mode: "limited", revealedTo: ["B"] });
+  });
+
+  it("limited: 공개 대상이 모두 삭제된 고착 상태 → owner 로 정리(회수 대상 무관)", () => {
+    // 신고된 버그의 핵심: revealedTo 가 죽은 id 뿐이면 회수 대상이 비어도 owner 로 수렴
+    expect(
+      computeRetractSecret({ mode: "limited", revealedTo: ["X", "Y"] }, [], isLive),
+    ).toEqual({ mode: "owner", revealedTo: [] });
+  });
+
+  it("limited: 살아있는 대상 회수 + 남은 죽은 id → owner(죽은 id 잔존 방지)", () => {
+    expect(
+      computeRetractSecret({ mode: "limited", revealedTo: ["A", "X"] }, ["A"], isLive),
+    ).toEqual({ mode: "owner", revealedTo: [] });
   });
 });
 
