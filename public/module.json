@@ -10,6 +10,7 @@
   "authors": [
     { "name": "JBGeum" }
   ],
+  "license": "LICENSE",
   "esmodules": ["module.js"],
   "styles": ["module.css"],
   "languages": [

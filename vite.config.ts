@@ -1,3 +1,4 @@
+import { copyFileSync } from "node:fs";
 import { defineConfig } from "vite";
 
 /**
@@ -11,6 +12,15 @@ import { defineConfig } from "vite";
 export default defineConfig({
   // public/ 의 내용은 빌드 시 dist 루트로 복사된다(Vite 기본 동작).
   publicDir: "public",
+  plugins: [
+    {
+      // MIT 는 배포되는 사본에 라이선스 전문 동봉을 요구한다. 루트 원본을 단일 출처로 유지.
+      name: "copy-license",
+      closeBundle() {
+        copyFileSync("LICENSE", "dist/LICENSE");
+      },
+    },
+  ],
   build: {
     outDir: "dist",
     emptyOutDir: true,
